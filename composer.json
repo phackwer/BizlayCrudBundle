@@ -10,7 +10,7 @@
     "minimum-stability": "dev",
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "https://sansis.visualstudio.com/DefaultCollection/_git/BizlayBundle"
         }
     ],
