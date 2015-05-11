@@ -1,4 +1,4 @@
-{
+﻿{
 	"name": "sansis/crud-bundle",
 	"description": "Bundle para manipulação de entidades com encapsulamento de regras de negócios em uma camada service",
     "license": "Commercial",
