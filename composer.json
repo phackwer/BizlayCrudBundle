@@ -1,4 +1,4 @@
-{
+﻿{
 	"name": "sansis/crud-bundle",
 	"description": "Bundle para manipulação de entidades com encapsulamento de regras de negócios em uma camada service",
     "license": "Commercial",
@@ -10,7 +10,7 @@
     "minimum-stability": "dev",
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "https://sansis.visualstudio.com/DefaultCollection/_git/BizlayBundle"
         }
     ],
