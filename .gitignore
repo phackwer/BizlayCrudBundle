@@ -1,0 +1,16 @@
+# general
+
+/vendor
+
+# tests
+
+/phpunit.xml
+
+# editor
+
+/.idea
+/nbproject
+
+# misc
+
+composer.phar

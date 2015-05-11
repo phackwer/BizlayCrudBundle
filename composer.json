@@ -1,0 +1,26 @@
+{
+	"name": "sansis/crud-bundle",
+	"description": "Bundle para manipulação de entidades com encapsulamento de regras de negócios em uma camada service",
+    "license": "Commercial",
+    "type": "symfony-bundle",
+    "authors": [{
+    	"name": "Pablo Santiago Sanchez",
+    	"email": "phackwer@gmail.com"
+    }],
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://sansis.visualstudio.com/DefaultCollection/_git/BizlayBundle"
+        }
+    ],
+    "require": {
+        "sansis/bizlay-bundle": "dev-master"
+    },
+    "autoload": {
+    	"psr-0": {
+    		"SanSIS\\CrudBundle": ""
+    	}
+    },
+    "target-dir": "SanSIS/CrudBundle"
+}

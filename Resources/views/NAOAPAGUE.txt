@@ -1,0 +1,4 @@
+Caso este arquivo seja excluído, o bundle parará de funcionar.
+Não remova o diretório, mesmo que nunca seja utilizado.
+
+Pablo Santiago Sánchez - phackwer@gmail.com

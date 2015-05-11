@@ -1,0 +1,237 @@
+{% macro generateHTML(formData, entityHumanName, formTitleAction, colTitles, createRoute = null, exportExcelRoute = null, exportPdfRoute = null, searchFormTemplate = 'CrudBundle::searchform.html.twig', backRoute = null) %}
+<section class="panel panel-default" role="region">
+    <header class="panel-heading">
+        <div class="pull-right">
+            {% if backRoute is not empty %}
+                <a href="{{ path(backRoute) }}" class="btn btn-s-md btn-default"><i class="fa fa-long-arrow-left"></i> Voltar</a>
+            {% endif %}
+            {% if createRoute is not null %}
+                {% if createRoute.route is defined %}
+                    <a href="{{ path(createRoute.route, createRoute.params) }}" class="btn btn-s-md btn-success"><i class="fa fa-plus"></i> Novo</a>
+                {% else %}
+                    <a href="{{ path(createRoute) }}" class="btn btn-s-md btn-success"><i class="fa fa-plus"></i> Novo</a>
+                {% endif %}
+            {% endif %}
+            <a href="#" class="btn btn-s-md btn-default" data-toggle="modal" data-target="#ajudaModal"><i class="fa fa-question-circle"></i> Ajuda</a>
+            {% if exportExcelRoute is not null or exportPdfRoute  is not null %}
+            <div class="btn-group">
+                <button class="btn btn-s-md btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-download"></i> Exportar <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    {% if exportPdfRoute  is not null %}
+                    <li>
+                        {% if exportPdfRoute.route is defined %}
+                            <a href="#" rota="{{ path(exportPdfRoute.route, exportPdfRoute.params) }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
+                        {% else %}
+                            <a href="#" rota="{{ exportPdfRoute }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                    {% if exportExcelRoute is not null %}
+                    <li>
+                        {% if exportExcelRoute.route is defined %}
+                            <a href="#" rota="{{ path(exportExcelRoute.route, exportExcelRoute.params) }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
+                        {% else %}
+                            <a href="#" rota="{{ exportExcelRoute }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        <h2 class="panel-title">{{ formTitleAction }}</h2>
+    </header>
+    <div class="row wrapper">
+        <form action="" method="GET" onsubmit="return false;" id="searchForm">
+            {% include searchFormTemplate %}
+        </form>
+        <div class="col-sm-6 m-b-xs text-right">
+            <select id="pageLength" class="input-sm form-control input-s-xs inline v-middle">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <button id="btnPageLength" class="btn btn-sm btn-default">Aplicar</button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <div id="DataTables_Table_0_wrapper" class="dataTables_wrapper form-inline no-footer">
+            <table id="grid" class="datatable table-striped b-t b-light table" role="grid" cellspacing="0" width="100%">
+                <thead>
+                <tr>
+                    {% for colTitle in colTitles %}
+                        <th>{{ colTitle }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <footer class="panel-footer clearfix">
+        <div class="pull-right">
+            {% if backRoute is not empty %}
+                <a href="{{ path(backRoute) }}" class="btn btn-s-md btn-default"><i class="fa fa-long-arrow-left"></i> Voltar</a>
+            {% endif %}
+            {% if createRoute is not null %}
+                {% if createRoute.route is defined %}
+                    <a href="{{ path(createRoute.route, createRoute.params) }}" class="btn btn-s-md btn-success"><i class="fa fa-plus"></i> Novo</a>
+                {% else %}
+                    <a href="{{ path(createRoute) }}" class="btn btn-s-md btn-success"><i class="fa fa-plus"></i> Novo</a>
+                {% endif %}
+            {% endif %}
+            <a href="#" class="btn btn-s-md btn-default" data-toggle="modal" data-target="#ajudaModal"><i class="fa fa-question-circle"></i> Ajuda</a>
+            {% if exportExcelRoute is not null or exportPdfRoute  is not null %}
+                <div class="btn-group">
+                    <button class="btn btn-s-md btn-default dropdown-toggle" data-toggle="dropdown"><i class="fa fa-download"></i> Exportar <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% if exportPdfRoute  is not null %}
+                            <li>
+                                {% if exportPdfRoute.route is defined %}
+                                    <a href="#" rota="{{ path(exportPdfRoute.route, exportPdfRoute.params) }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
+                                {% else %}
+                                    <a href="#" rota="{{ exportPdfRoute }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                        {% if exportExcelRoute is not null %}
+                            <li>
+                                {% if exportExcelRoute.route is defined %}
+                                    <a href="#" rota="{{ path(exportExcelRoute.route, exportExcelRoute.params) }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
+                                {% else %}
+                                    <a href="#" rota="{{ exportExcelRoute }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </footer>
+</section>
+{% endmacro %}
+
+
+
+{% macro generateScript(searchRoute, attrNames, csrf = null, deleteRoute = null, pageLength = 10, orderColumn = 0) %}
+<script src="http://cdn.sansis.net/scripts/vendor/table.js"></script>
+<script>
+
+    $(document).ready(function() {
+        var grid = $('#grid').on('draw.dt', function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        }).dataTable({
+            "columns": [
+                {% set counter = 0 %}
+                {% for attrName in attrNames %}
+                {"data" : "{{ attrName }}"}{% if counter != (attrNames | length) %},{% endif %}
+                {% set counter = counter + 1 %}
+                {% endfor %}
+            ],
+            "lengthChange": false,
+            "searching": false,
+            "pageLength": $('#pageLength').val(),
+            "order": [[ {{ orderColumn }}, "asc" ]],
+            "processing": true,
+            "serverSide": true,
+            "search": false,
+            "language": {
+                "lengthMenu": "Mostrar _MENU_ registros por página",
+                "zeroRecords": "Nenhum registro encontrado",
+                "info": "Página _PAGE_ de _PAGES_",
+                "infoEmpty": "Nenhum registro encontrado",
+                "emptyTable":     "Não existem informações cadastradas",
+                "infoFiltered":   "(Filtrado de _MAX_ total de registros)",
+                "infoPostFix":    "",
+                "thousands":      ",",
+                "loadingRecords": "Carregando...",
+                "processing":     "Processando...",
+                "search":         "Buscar:",
+                "paginate": {
+                    "first":      "Primeiro",
+                    "last":       "Último",
+                    "next":       "Próximo",
+                    "previous":   "Anterior"
+                }
+            },
+            "ajax": {
+            {% if searchRoute.route is defined %}
+                    "url": '{{ path(searchRoute.route, searchRoute.params) }}',
+            {% else %}
+                "url": '{{ path(searchRoute) }}',
+            {% endif %}
+                "data": function ( data ) {
+                    data.searchData = $("#searchForm").serializeArray()
+                }
+            }
+        });
+
+        $('#searchAllBt').click( function() {
+            var table = $('#grid').DataTable();
+            table.draw();
+        });
+
+        $('#searchClearBt').click( function() {
+            var table = $('#grid').DataTable();
+            $("#searchForm").find('select, input').val('');
+            table.draw();
+        });
+
+        $('#btnPageLength').click( function(event) {
+            event.preventDefault();
+            var oSettings = grid.fnSettings();
+            oSettings._iDisplayLength = parseInt($('#pageLength').val());
+            grid.fnDraw();
+        });
+
+        $('#export_excel').click( function(){
+            window.location.href = $('#export_excel').attr('rota') + '?' +$("#searchForm").serialize();
+        });
+
+        $('#export_pdf').click( function(){
+            window.location.href = $('#export_pdf').attr('rota') + '?' + $("#searchForm").serialize();
+        });
+    });
+
+    {% if deleteRoute is not null %}
+    function confirmarRemocao(id) {
+        $("#cancelConfirmButton").removeClass('btn-success');
+        $("#cancelConfirmButton").html('Cancelar');
+        $("#confirmDialogBody").html("Tem certeza que deseja remover este registro?");
+        $("#confirmDialog").modal('show');
+        $("#confirmButton").show();
+        $("#confirmButton").unbind('click');
+        $("#confirmButton").click(function () {
+            $.ajax({
+                type: "POST",
+                {% if deleteRoute.route is defined %}
+                "url": '{{ path(deleteRoute.route, deleteRoute.params) }}',
+                {% else %}
+                "url": '{{ path(deleteRoute) }}',
+                {% endif %}
+                data: {
+                    id: id,
+                    __csrf: '{{ csrf }}'
+                },
+                dataType: 'json'
+            }).success(function () {
+                $("#cancelConfirmButton").addClass('btn-success');
+                $("#cancelConfirmButton").html('Fechar');
+                $("#searchAllBt").trigger('click');
+                $("#confirmButton").hide();
+                $("#confirmDialogBody").html("Registro removido com sucesso");
+                window.setTimeout(function () {
+                    $("#confirmDialog").modal('hide')
+                }, 1000);
+            })
+                    .error(function () {
+                        $("#confirmButton").hide();
+                        $("#confirmDialogBody").html('Ocorreram erros ao tentar remover o registro selecionado. Entre em contato com o administrador do sistema.');
+                    })
+        })
+    }
+    {% endif %}
+</script>
+{% endmacro %}
