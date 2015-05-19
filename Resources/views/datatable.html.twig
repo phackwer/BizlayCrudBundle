@@ -1,4 +1,5 @@
 {% macro generateHTML(formData, entityHumanName, formTitleAction, colTitles, createRoute = null, exportExcelRoute = null, exportPdfRoute = null, searchFormTemplate = 'CrudBundle::searchform.html.twig', backRoute = null) %}
+<div id="loading" class="loading-spin"><i class="load fa fa-refresh fa-lg fa-spin"></i></div>
 <section class="panel panel-default" role="region">
     <header class="panel-heading">
         <div class="pull-right">
@@ -113,11 +114,15 @@
 </section>
 {% endmacro %}
 
-
-
 {% macro generateScript(searchRoute, attrNames, csrf = null, deleteRoute = null, pageLength = 10, orderColumn = 0) %}
-<script src="http://cdn.sansis.net/scripts/vendor/table.js"></script>
+<script src="{{ asset('bundles/view/') }}scripts/vendor/table.js"></script>
 <script>
+    function showMessage(){
+        $("#loading").show();
+    }
+    function hideOverlay(){
+        $("#loading").hide();
+    }
 
     $(document).ready(function() {
         var grid = $('#grid').on('draw.dt', function () {
@@ -156,12 +161,19 @@
                     "previous":   "Anterior"
                 }
             },
+            "fnPreDrawCallback": function(){
+                showMessage();
+                return true;
+            },"fnDrawCallback": function(){
+                hideOverlay();
+            },
             "ajax": {
             {% if searchRoute.route is defined %}
                     "url": '{{ path(searchRoute.route, searchRoute.params) }}',
             {% else %}
                 "url": '{{ path(searchRoute) }}',
             {% endif %}
+                "type": "POST",
                 "data": function ( data ) {
                     data.searchData = $("#searchForm").serializeArray()
                 }

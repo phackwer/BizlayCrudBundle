@@ -185,16 +185,15 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
 
         //pagina a ser retornada
         //quantidade de linhas a serem retornadas por página
-        $rows = $this->getDto()->query->get('length');
-
-        $query->setFirstResult($this->getDto()->query->get('start'))
+        $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length') : $this->getDto()->request->get('length');
+        $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
               ->setMaxResults($rows);
 
         $pagination = new Paginator($query, true);
 
         //Objeto de resposta
         $data = new \StdClass();
-        $data->draw = (int) $this->getDto()->query->get('draw', 1);
+        $data->draw = (int) $this->getDto()->query->has('draw') ? $this->getDto()->query->get('draw', 1) : $this->getDto()->request->get('draw', 1);
         $data->recordsFiltered = $pagination->count();
         $data->recordsTotal = $pagination->count();
         //linhas da resposta - o método abaixo pode (e provavelmente deve)
@@ -429,6 +428,22 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
     }
 
     /**
+     * Definição padrão do redirect após persistência
+     * Sobrescreva caso precise quaisquer parâmetros adicionais
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function redirectAfterSave()
+    {
+        if ($this->saveSuccessConditional()) {
+            $id = $this->obfuscateEntityId($this->getSaveSuccessId());
+            return $this->redirectByRouteName($this->autoSaveSuccessRoute(), 302, array('id' => $id));
+        } else {
+            return $this->redirectByRouteName($this->autoSaveSuccessRoute());
+        }
+    }
+
+    /**
      * Action que deve ser mapeada para salvar os registros no banco de dados
      *
      * @Route("/save")
@@ -452,12 +467,7 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
                 $this->get('core.message')->addMessage('sucesso', 'MS000');
             }
             $this->get('session')->set('SaveResult', true);
-            if ($this->saveSuccessConditional()) {
-                $id = $this->obfuscateEntityId($this->getSaveSuccessId());
-                return $this->redirectByRouteName($this->autoSaveSuccessRoute(), 302, array('id' => $id));
-            } else {
-                return $this->redirectByRouteName($this->autoSaveSuccessRoute());
-            }
+            return $this->redirectAfterSave();
         } catch (\Exception $e) {
             $this->get('session')->set('SaveResult', $this->getService()->getRootEntityData());
 

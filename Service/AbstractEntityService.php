@@ -651,20 +651,6 @@ abstract class AbstractEntityService extends AbstractService
     }
 
     /**
-     * EXEMPLO DE CÓDIGO PARA SOBRESCRITA E MULTIPROCESSAMENTO DE SAVE
-     */
-    // public function save(ServiceDto $dto)
-    // {
-    //     foreach($dto->request->get('fela') as $obj)
-    //     {
-    //         //Criar Dto individual
-    //         $felaDto = new ServiceDto($);
-    //         felaDto->request = new ServiceParameterBag($obj);
-    //         parent::save($felaDto);
-    //     }
-    // }
-
-    /**
      * Método para execução de ações após a persistência do objeto raiz.
      * @example Disparar e-mails, criar arquivos de log, etc
      *
@@ -683,8 +669,8 @@ abstract class AbstractEntityService extends AbstractService
 
     public function filterSearchData(ServiceDto $dto)
     {
-        if ($dto->query->has('searchData')) {
-            $keys = $dto->query->get('searchData');
+        if ($dto->query->has('searchData') || $dto->request->has('searchData')) {
+            $keys = $dto->request->has('searchData') ? $dto->request->get('searchData') : $dto->query->get('searchData');
             if (is_array($keys)) {
                 if (!isset($searchData)) {
                     $searchData = array();
@@ -696,7 +682,7 @@ abstract class AbstractEntityService extends AbstractService
                 $searchData['searchAll'] = $keys;
             }
         } else {
-            $keys = $dto->query->all();
+            $keys = $dto->request->all() ? $dto->request->all() : $dto->query->all();
             if (is_array($keys)) {
                 $searchData = array();
                 foreach ($keys as $k => $v) {
@@ -705,13 +691,11 @@ abstract class AbstractEntityService extends AbstractService
             }
         }
 
-        $columns = $dto->query->get('columns');
+        $columns = $dto->request->has('columns') ? $dto->request->get('columns') : $dto->query->get('columns');
 
         $searchData['orderby'] = '';
 
-        //var_dump($searchData);die;
-
-        $order = $dto->query->get('order');
+        $order = $dto->request->has('order') ? $dto->request->get('order') : $dto->query->get('order');
         $and = '';
         if ($order) {
             foreach ($order as $k => $vals) {
