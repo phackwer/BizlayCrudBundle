@@ -24,7 +24,7 @@
                         {% if exportPdfRoute.route is defined %}
                             <a href="#" rota="{{ path(exportPdfRoute.route, exportPdfRoute.params) }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
                         {% else %}
-                            <a href="#" rota="{{ exportPdfRoute }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
+                            <a href="#" rota="{{ path(exportPdfRoute) }}" id="export_pdf"><i class="fa fa-file-pdf-o"></i> Salvar em PDF</a>
                         {% endif %}
                     </li>
                     {% endif %}
@@ -33,7 +33,7 @@
                         {% if exportExcelRoute.route is defined %}
                             <a href="#" rota="{{ path(exportExcelRoute.route, exportExcelRoute.params) }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
                         {% else %}
-                            <a href="#" rota="{{ exportExcelRoute }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
+                            <a href="#" rota="{{ path(exportExcelRoute) }}" id="export_excel"><i class="fa fa-file-pdf-o"></i> Salvar em Excel</a>
                         {% endif %}
                     </li>
                     {% endif %}

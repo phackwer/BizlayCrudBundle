@@ -202,13 +202,13 @@ abstract class AbstractEntityService extends AbstractService
         if ($this->debug) {
             echo '<pre>';
             echo "Query (\$_GET): \n";
-            print_r($dto->query->all());
+            echo highlight_string("<?php \n\n\$_GET = " . var_export($dto->query->all(), true));
             echo "\n\n\nPost (\$_POST): \n";
-            print_r($dto->request->all());
+            echo highlight_string("<?php \n\n\$_POST = " . var_export($dto->request->all(), true));
             echo "\n\n\nEstrutura como deveria ser populada: \n";
             $t = $this->getRootEntityName();
             $t = new $t();
-            print_r($t->buildFullEmptyEntity());
+            echo highlight_string("<?php \n\n" . var_export($t->buildFullEmptyEntity(), true));
         }
 
         try {
@@ -221,7 +221,7 @@ abstract class AbstractEntityService extends AbstractService
 
             if ($this->debug) {
                 echo "\n\n\nComo a entidade foi populada: \n";
-                print_r($this->getRootEntity()->toArray());
+                echo highlight_string("<?php \n\n" . var_export($this->getRootEntity()->toArray(), true));
                 die;
             }
         } catch (\Exception $e) {
@@ -230,16 +230,16 @@ abstract class AbstractEntityService extends AbstractService
             if (!$this->debug) {
                 echo '<pre>';
                 echo "Query (\$_GET): \n";
-                print_r($dto->query->all());
+                echo highlight_string("<?php \n\n\$_GET = " . var_export($dto->query->all(), true));
                 echo "\n\n\nPost (\$_POST): \n";
-                print_r($dto->request->all());
+                echo highlight_string("<?php \n\n\$_POST = " . var_export($dto->request->all(), true));
                 echo "\n\n\nEstrutura como deveria ser populada: \n";
                 $t = $this->getRootEntityName();
                 $t = new $t();
-                print_r($t->buildFullEmptyEntity());
+                echo highlight_string("<?php \n\n" . var_export($t->buildFullEmptyEntity(), true));
             }
             echo "\n\n\nERRO Como a entidade foi populada: \n";
-            print_r($this->getRootEntity()->toArray());
+            echo highlight_string("<?php \n\n" . var_export($this->getRootEntity()->toArray(), true));
             die;
         }
     }
