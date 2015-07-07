@@ -1,5 +1,5 @@
 {
-	"name": "sansis/crud-bundle",
+	"name": "sansis/bizlaycrud-bundle",
 	"description": "Bundle para manipulação de entidades com encapsulamento de regras de negócios em uma camada service",
     "license": "Commercial",
     "type": "symfony-bundle",
@@ -11,7 +11,7 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://sansis.visualstudio.com/DefaultCollection/_git/BizlayBundle"
+            "url": "https://github.com/phackwer/BizlayBundle"
         }
     ],
     "require": {
@@ -22,6 +22,5 @@
     		"SanSIS\\CrudBundle": ""
     	}
     },
-    "target-dir": "SanSIS/CrudBundle"
 }
 
