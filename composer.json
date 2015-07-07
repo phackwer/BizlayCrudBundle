@@ -21,6 +21,7 @@
     	"psr-0": {
     		"SanSIS\\CrudBundle": ""
     	}
-    }
+    },
+    "target-dir": "SanSIS/CrudBundle"
 }
 
