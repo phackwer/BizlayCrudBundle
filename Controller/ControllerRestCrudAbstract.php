@@ -6,10 +6,7 @@ use \Doctrine\ORM\Tools\Pagination\Paginator;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use \Symfony\Component\Config\Definition\Exception\Exception;
-use \Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
-use \Symfony\Component\Security\Core\Exception\TokenNotFoundException;
 
 /**
  * Classe que implementa um controller padrão para CRUDs
@@ -47,9 +44,9 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     public function getEntityDataAction($id)
     {
         $id = $this->clarifyEntityId($id);
-        
+
         $entityData = $this->getService()->getRootEntityData($id);
-        
+
         return $this->renderJson($this->obfuscateIds($entityData));
     }
 
@@ -61,15 +58,15 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     {
         // Busca a query que será utilizada na pesquisa para a grid
         $query = $this->getService()->$searchQueryMethod($this->getDto());
-        
+
         // pagina a ser retornada
         // quantidade de linhas a serem retornadas por página
         $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length') : $this->getDto()->request->get('length');
         $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
-            ->setMaxResults($rows);
-        
+              ->setMaxResults($rows);
+
         $pagination = new Paginator($query, true);
-        
+
         // Objeto de resposta
         $data = new \StdClass();
         $data->draw = (int) $this->getDto()->query->has('draw') ? $this->getDto()->query->get('draw', 1) : $this->getDto()->request->get('draw', 1);
@@ -78,7 +75,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         // linhas da resposta - o método abaixo pode (e provavelmente deve)
         // ser implantado de acordo com as necessidades da aplicação
         $data->data = $this->$prepareGridRowsMethod($pagination);
-        
+
         return $data;
     }
 
@@ -93,14 +90,14 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     {
         $array = array();
         $id = null;
-        
+
         foreach ($pagination as $k => $item) {
             // Obscurece os ids dos itens listados:
             $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
             $array[$k]['g'] = $item;
         }
-        
+
         return $array;
     }
 
@@ -123,7 +120,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     public function getSavedId()
     {
         return $this->obfuscateIds($this->getService()
-            ->getRootEntityId());
+                                            ->getRootEntityId());
     }
 
     /**
@@ -151,7 +148,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     public function deleteAction()
     {
         $id = $this->getDto()->request->get('id');
-        
+
         if ($id) {
             $this->getService()->removeEntity($id);
             return $this->renderJson();
