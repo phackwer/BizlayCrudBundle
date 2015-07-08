@@ -1,6 +1,8 @@
 <?php
 namespace SanSIS\CrudBundle\Service;
 
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\IndexedReader;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
@@ -8,6 +10,7 @@ use \SanSIS\BizlayBundle\Service\AbstractService;
 use \SanSIS\BizlayBundle\Service\ServiceDto;
 use \SanSIS\CrudBundle\Service\Exception\ValidationException;
 use \SanSIS\CrudBundle\Service\Exception\WrongTypeRootEntityException;
+use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 /**
  * @TODO Tratar Files no upload - deverá ser antes do flush para utilizar a
@@ -561,6 +564,91 @@ abstract class AbstractEntityService extends AbstractService
     }
 
     /**
+     * Regras de verificação unique sobre a entidade
+     * Caso existam erros de verificação de unique, registre a mensagem com addError
+     */
+    private function checkUnique(ServiceDto $dto)
+    {
+        $reflx = new \ReflectionClass($this->getRootEntity());
+        $reader = new IndexedReader(new AnnotationReader());
+        $props = $reflx->getProperties();
+
+        foreach ($props as $prop) {
+            $annons = $reader->getPropertyAnnotations($prop);
+            if(isset($annons['Doctrine\ORM\Mapping\Column']->unique) && $annons['Doctrine\ORM\Mapping\Column']->unique){
+                $getMethod = 'get'.ucfirst($prop->getName());
+                $uniqueParam = $this->getRootEntity()->$getMethod();
+                //verificar e adicionar o erro
+                $qb = $this->getRootRepository()->createQueryBuilder('u');
+                $qb->select('u.id')
+                ->andWhere(
+                    $qb->expr()->eq('u.'.$prop->getName(), ':param')
+                )
+                ->setParameter('param', $uniqueParam);
+
+                $id = $this->getRootEntity()->getId();
+                if(is_null($id)){
+                    $qb->andWhere(
+                        $qb->expr()->isNotNull('u.id')
+                    );
+                }else{
+                    $qb->andWhere(
+                        $qb->expr()->neq('u.id', ':id')
+                    )
+                    ->setParameter('id', $id);
+                }
+                if ( count($qb->getQuery()->getOneOrNullResult()) ){
+                    $attrName = $this->getJsonAttrTitle($this->getRootEntityName(), $prop->getName());
+                    $this->addError('verificação', 'Já existe o valor informado para '.$attrName.'.');
+                }
+            }
+        }
+    }
+
+    /**
+     * Utilizado para pegar o nome traduzido de um atributo a partir do jsonshcema de uma entidade
+     * @param $entityName
+     * @param $attr
+     * @return mixed
+     */
+    public function getJsonAttrTitle($entityName, $attr)
+    {
+        $jsonSchema = $this->getJsonSchema($entityName);
+        if(isset($jsonSchema['properties'][$attr]['title'])
+            && !empty($jsonSchema['properties'][$attr]['title'])) {
+            return $jsonSchema['properties'][$attr]['title'];
+        }
+        return $attr;
+    }
+
+    /**
+     * Responsável por retornar o jsonschema em array de uma entidade
+     * @param $entityName
+     * @return mixed
+     */
+    public function getJsonSchema($entityName)
+    {
+        $dsp = DIRECTORY_SEPARATOR;
+        $arr = explode('\\Entity\\', $entityName);
+        $nsp = '@'.str_replace('\\','',current( $arr ));
+
+        $nsPath = $this->container->get('kernel')->locateResource($nsp);
+
+        $jschFilePathArray = array(
+            $nsPath,
+            'Resources',
+            'public',
+            'schema',
+            strtolower($arr[1]).'.json'
+        );
+        $jschFilePath = implode($dsp, $jschFilePathArray);
+
+        if(file_exists($jschFilePath)) {
+            return json_decode(file_get_contents($jschFilePath), true);
+        }
+    }
+
+    /**
      * Método que realmente processa a população, validação, verificação,
      * uploads e persistência (nesta exata sequência) da entidade raiz
      *
@@ -575,6 +663,11 @@ abstract class AbstractEntityService extends AbstractService
         $this->setRootEntityForFlush($dto);
         $this->populateRootEntity($dto);
 
+        $this->checkUnique($dto);
+        if ($this->hasErrors()) {
+            throw new \SanSIS\CrudBundle\Service\Exception\UniqueException($this->errors);
+        }
+
         $this->validateRootEntity($dto);
         if ($this->hasErrors()) {
             throw new \SanSIS\CrudBundle\Service\Exception\ValidationException($this->errors);
@@ -583,6 +676,11 @@ abstract class AbstractEntityService extends AbstractService
         $this->verifyRootEntity($dto);
         if ($this->hasErrors()) {
             throw new \SanSIS\CrudBundle\Service\Exception\VerificationException($this->errors);
+        }
+
+        $this->handleUploads($dto);
+        if ($this->hasErrors()) {
+            throw new \SanSIS\CrudBundle\Service\Exception\HandleUploadsException($this->errors);
         }
 
         $this->handleUploads($dto);
