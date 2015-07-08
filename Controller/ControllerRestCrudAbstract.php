@@ -4,9 +4,7 @@ namespace SanSIS\CrudBundle\Controller;
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use \Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Classe que implementa um controller padrão para CRUDs
@@ -24,24 +22,11 @@ use \Symfony\Component\Config\Definition\Exception\Exception;
  */
 abstract class ControllerRestCrudAbstract extends ControllerAbstract
 {
-
-    /**
-     * Action default da controller
-     *
-     * @Route("/")
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function indexAction()
-    {
-        return $this->renderJson(array());
-    }
-
     /**
      * Action que deve ser mapeada para edição de registros
      *
-     * @Route("/{id}")
      */
-    public function getEntityDataAction($id)
+    public function getAction($id)
     {
         $id = $this->clarifyEntityId($id);
 
@@ -104,8 +89,6 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     /**
      * Action que deve ser mapeada para realizar a pesquisa e popular uma grid
      *
-     * @Route("/search")
-     * @Method({"GET", "POST"})
      */
     public function searchAction()
     {
@@ -126,32 +109,25 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     /**
      * Action que deve ser mapeada para salvar os registros no banco de dados
      *
-     * @Route("/save")
-     * @Method({"POST"})
+     * api_nomedacontroller_post_save
+     * /(nome_da_controller)/save.{_format}
      */
-    public function saveAction()
+    public function postSaveAction()
     {
-        try {
-            $this->getService()->save($this->getDto());
-            return $this->renderJson($this->getSavedId());
-        } catch (\Exception $e) {
-            return $this->redirectByReferer(302);
-        }
+        $this->getService()->save($this->getDto());
+        return $this->renderJson($this->getSavedId());
     }
 
     /**
      * Action que deve ser mapeada para excluir os registros do banco de dados
      *
-     * @Route("/delete")
-     * @Method({"POST"})
      */
-    public function deleteAction()
+    public function deleteAction($id = null)
     {
-        $id = $this->getDto()->request->get('id');
-
         if ($id) {
             $this->getService()->removeEntity($id);
             return $this->renderJson();
         }
+        throw new BadRequestHttpException();
     }
 }
