@@ -1,10 +1,10 @@
 <?php
 namespace SanSIS\CrudBundle\Controller;
 
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Classe que implementa um controller padrão para CRUDs
@@ -24,15 +24,16 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 {
     /**
      * Action que deve ser mapeada para edição de registros
-     *
      */
     public function getAction($id)
     {
-        $id = $this->clarifyEntityId($id);
+        // $id = $this->clarifyEntityId($id);
 
         $entityData = $this->getService()->getRootEntityData($id);
 
-        return $this->renderJson($this->obfuscateIds($entityData));
+        // $entityData = $this->obfuscateIds($entityData);
+
+        return $this->renderJson($entityData);
     }
 
     /**
@@ -78,7 +79,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
         foreach ($pagination as $k => $item) {
             // Obscurece os ids dos itens listados:
-            $item = $this->obfuscateIds($item);
+            // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
             $array[$k]['g'] = $item;
         }
@@ -102,8 +103,9 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      */
     public function getSavedId()
     {
-        return $this->obfuscateIds($this->getService()
-                                            ->getRootEntityId());
+        $id = $this->getService()->getRootEntityId();
+        // $id =  $this->obfuscateIds($id);
+        return $id;
     }
 
     /**
