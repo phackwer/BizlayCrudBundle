@@ -49,7 +49,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
         // pagina a ser retornada
         // quantidade de linhas a serem retornadas por página
-        $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length') : $this->getDto()->request->get('length');
+        $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length', 20) : $this->getDto()->request->get('length', 20);
         $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
               ->setMaxResults($rows);
 
@@ -60,6 +60,9 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         $data->draw = (int) $this->getDto()->query->has('draw') ? $this->getDto()->query->get('draw', 1) : $this->getDto()->request->get('draw', 1);
         $data->recordsFiltered = $pagination->count();
         $data->recordsTotal = $pagination->count();
+        $data->pageLength = $rows;
+        $data->pageCount = ceil($pagination->count() / $rows);
+
         // linhas da resposta - o método abaixo pode (e provavelmente deve)
         // ser implantado de acordo com as necessidades da aplicação
         $data->data = $this->$prepareGridRowsMethod($pagination);
