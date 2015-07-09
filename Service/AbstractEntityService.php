@@ -757,11 +757,31 @@ abstract class AbstractEntityService extends AbstractService
     {
     }
 
+    public function checkStatusTuple($entity)
+    {
+        return (
+            method_exists($entity, 'setStatusTuple') ||
+            method_exists($entity, 'setIsActive') ||
+            method_exists($entity, 'setFlActive')
+        )
+        ? true : false;
+    }
+
     public function removeEntity($id)
     {
+
         $this->getRootEntity($id);
-        $this->getEntityManager()->remove($this->rootEntity);
+        if (!$this->checkStatusTuple($this->getRootEntity())) {
+            $this->getEntityManager()->remove($this->rootEntity);
+        } else {
+            if ($this->rootEntity->getStatusTuple() == 2) {
+                throw new \Exception('Este registro não é removível!');
+            }
+            $this->rootEntity->setStatusTuple(0);
+        }
         $this->getEntityManager()->flush();
+
+        return true;
     }
 
     public function filterSearchData(ServiceDto $dto)

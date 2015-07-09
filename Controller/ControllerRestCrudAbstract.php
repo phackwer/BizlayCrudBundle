@@ -51,7 +51,10 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         // quantidade de linhas a serem retornadas por página
         $rows = $this->getDto()->query->has('rows') ? $this->getDto()->query->get('rows', 20) : $this->getDto()->request->get('rows', 20);
         $page = $this->getDto()->query->has('page') ? $this->getDto()->query->get('page', 1) : $this->getDto()->request->get('page', 1);
+        $rows = ($rows >= 1) ? $rows : 20; //só para evitar divisão por 0
+        $page = ($page >= 1) ? $page : 1; //só para evitar página negativa
         $start = ($page * $rows) - $rows;
+        $start = ($start >= 0) ? $start : 0;
         $query->setFirstResult($start)
               ->setMaxResults($rows);
 
@@ -60,6 +63,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         // Objeto de resposta
         $data = new \StdClass();
         $data->count = $pagination->count();
+        $data->itemsPerPage = $rows;
         $data->page = $page;
         $data->pageCount = ceil($pagination->count() / $rows);
 
