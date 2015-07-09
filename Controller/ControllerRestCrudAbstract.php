@@ -49,23 +49,23 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
         // pagina a ser retornada
         // quantidade de linhas a serem retornadas por página
-        $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length', 20) : $this->getDto()->request->get('length', 20);
-        $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
+        $rows = $this->getDto()->query->has('rows') ? $this->getDto()->query->get('rows', 20) : $this->getDto()->request->get('rows', 20);
+        $page = $this->getDto()->query->has('page') ? $this->getDto()->query->get('page', 1) : $this->getDto()->request->get('page', 1);
+        $start = ($page * $rows) - $rows;
+        $query->setFirstResult($start)
               ->setMaxResults($rows);
 
         $pagination = new Paginator($query, true);
 
         // Objeto de resposta
         $data = new \StdClass();
-        $data->draw = (int) $this->getDto()->query->has('draw') ? $this->getDto()->query->get('draw', 1) : $this->getDto()->request->get('draw', 1);
-        $data->recordsFiltered = $pagination->count();
-        $data->recordsTotal = $pagination->count();
-        $data->pageLength = $rows;
+        $data->count = $pagination->count();
+        $data->page = $page;
         $data->pageCount = ceil($pagination->count() / $rows);
 
         // linhas da resposta - o método abaixo pode (e provavelmente deve)
         // ser implantado de acordo com as necessidades da aplicação
-        $data->data = $this->$prepareGridRowsMethod($pagination);
+        $data->items = $this->$prepareGridRowsMethod($pagination);
 
         return $data;
     }
@@ -86,8 +86,8 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            $array[$k]['g'] = $item;
-            $array[$k]['g']['userAccessLevels'] = $this->getUserAccessLevels($item['id'], $item);
+            $array[$k] = $item;
+            $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item['id'], $item);
         }
 
         return $array;
