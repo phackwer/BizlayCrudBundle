@@ -4,6 +4,7 @@ namespace SanSIS\CrudBundle\Controller;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
+use \FOS\RestBundle\Controller\Annotations as Rest;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
 
 /**
@@ -24,6 +25,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 {
     /**
      * Action que deve ser mapeada para edição de registros
+     * @Rest\Get("/{id}", requirements={"id" = "\d+"})
      */
     public function getAction($id)
     {
@@ -91,7 +93,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      * Action que deve ser mapeada para realizar a pesquisa e popular uma grid
      *
      */
-    public function searchAction()
+    public function getSearchAction()
     {
         $data = $this->getGridData();
         return $this->renderJson($data);
@@ -122,7 +124,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
     /**
      * Action que deve ser mapeada para excluir os registros do banco de dados
-     *
+     * @Rest\Delete("/{id}", requirements={"id" = "\d+"})
      */
     public function deleteAction($id = null)
     {
