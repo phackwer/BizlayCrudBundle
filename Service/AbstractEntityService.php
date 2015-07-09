@@ -10,7 +10,6 @@ use \SanSIS\BizlayBundle\Service\AbstractService;
 use \SanSIS\BizlayBundle\Service\ServiceDto;
 use \SanSIS\CrudBundle\Service\Exception\ValidationException;
 use \SanSIS\CrudBundle\Service\Exception\WrongTypeRootEntityException;
-use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 
 /**
  * @TODO Tratar Files no upload - deverá ser antes do flush para utilizar a
@@ -575,31 +574,31 @@ abstract class AbstractEntityService extends AbstractService
 
         foreach ($props as $prop) {
             $annons = $reader->getPropertyAnnotations($prop);
-            if(isset($annons['Doctrine\ORM\Mapping\Column']->unique) && $annons['Doctrine\ORM\Mapping\Column']->unique){
-                $getMethod = 'get'.ucfirst($prop->getName());
+            if (isset($annons['Doctrine\ORM\Mapping\Column']->unique) && $annons['Doctrine\ORM\Mapping\Column']->unique) {
+                $getMethod = 'get' . ucfirst($prop->getName());
                 $uniqueParam = $this->getRootEntity()->$getMethod();
                 //verificar e adicionar o erro
                 $qb = $this->getRootRepository()->createQueryBuilder('u');
                 $qb->select('u.id')
-                ->andWhere(
-                    $qb->expr()->eq('u.'.$prop->getName(), ':param')
-                )
-                ->setParameter('param', $uniqueParam);
+                   ->andWhere(
+                       $qb->expr()->eq('u.' . $prop->getName(), ':param')
+                   )
+                   ->setParameter('param', $uniqueParam);
 
                 $id = $this->getRootEntity()->getId();
-                if(is_null($id)){
+                if (is_null($id)) {
                     $qb->andWhere(
                         $qb->expr()->isNotNull('u.id')
                     );
-                }else{
+                } else {
                     $qb->andWhere(
-                        $qb->expr()->neq('u.id', ':id')
-                    )
-                    ->setParameter('id', $id);
+                           $qb->expr()->neq('u.id', ':id')
+                       )
+                       ->setParameter('id', $id);
                 }
-                if ( count($qb->getQuery()->getOneOrNullResult()) ){
+                if (count($qb->getQuery()->getOneOrNullResult())) {
                     $attrName = $this->getJsonAttrTitle($this->getRootEntityName(), $prop->getName());
-                    $this->addError('verificação', 'Já existe o valor informado para '.$attrName.'.');
+                    $this->addError('verificação', 'Já existe o valor informado para ' . $attrName . '.');
                 }
             }
         }
@@ -614,7 +613,7 @@ abstract class AbstractEntityService extends AbstractService
     public function getJsonAttrTitle($entityName, $attr)
     {
         $jsonSchema = $this->getJsonSchema($entityName);
-        if(isset($jsonSchema['properties'][$attr]['title'])
+        if (isset($jsonSchema['properties'][$attr]['title'])
             && !empty($jsonSchema['properties'][$attr]['title'])) {
             return $jsonSchema['properties'][$attr]['title'];
         }
@@ -630,7 +629,7 @@ abstract class AbstractEntityService extends AbstractService
     {
         $dsp = DIRECTORY_SEPARATOR;
         $arr = explode('\\Entity\\', $entityName);
-        $nsp = '@'.str_replace('\\','',current( $arr ));
+        $nsp = '@' . str_replace('\\', '', current($arr));
 
         $nsPath = $this->container->get('kernel')->locateResource($nsp);
 
@@ -639,11 +638,11 @@ abstract class AbstractEntityService extends AbstractService
             'Resources',
             'public',
             'schema',
-            strtolower($arr[1]).'.json'
+            strtolower($arr[1]) . '.json',
         );
         $jschFilePath = implode($dsp, $jschFilePathArray);
 
-        if(file_exists($jschFilePath)) {
+        if (file_exists($jschFilePath)) {
             return json_decode(file_get_contents($jschFilePath), true);
         }
     }
@@ -830,5 +829,38 @@ abstract class AbstractEntityService extends AbstractService
     public function getSearchSubCells($id)
     {
         return array();
+    }
+
+    /**
+     * Métodos para auxiliar a verificação da permissão de um usuário para determinada ação
+     * Devem ser sobrescritos
+     *
+     * @param  [type] $id   [description]
+     * @param  [type] $item [description]
+     * @return [type]       [description]
+     */
+    public function checkUserEditPermission($id, $item)
+    {
+        return true;
+    }
+
+    /**
+     * @param  [type] $id   [description]
+     * @param  [type] $item [description]
+     * @return [type]       [description]
+     */
+    public function checkUserViewPermission($id, $item)
+    {
+        return true;
+    }
+
+    /**
+     * @param  [type] $id   [description]
+     * @param  [type] $item [description]
+     * @return [type]       [description]
+     */
+    public function checkUserDeletePermission($id, $item)
+    {
+        return true;
     }
 }

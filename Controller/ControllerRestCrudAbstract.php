@@ -87,9 +87,25 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
             $array[$k]['g'] = $item;
+            $array[$k]['g']['userAccessLevels'] = $this->getUserAccessLevels($item['id'], $item);
         }
 
         return $array;
+    }
+
+    /**
+     * Sobrescreva este método para definir os níveis de acesso na listagem retornada.
+     * @param  int   $id   id do item
+     * @param  array $item linha completa referente ao item
+     * @return array       array de níveis de acesso para utilização no clientSide
+     */
+    public function getUserAccessLevels($id, $item)
+    {
+        return array(
+            'edit' => $this->getService()->checkUserEditPermission($id, $item),
+            'view' => $this->getService()->checkUserViewPermission($id, $item),
+            'del' => $this->getService()->checkUserDeletePermission($id, $item),
+        );
     }
 
     /**
