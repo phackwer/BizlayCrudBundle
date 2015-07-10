@@ -769,7 +769,7 @@ abstract class AbstractEntityService extends AbstractService
     {
 
         $this->getRootEntity($id);
-        $removeMethod = $this->checkStatusTuple($this->getRootEntity())
+        $removeMethod = $this->checkStatusTuple($this->getRootEntity());
         if (!$removeMethod) {
             $this->getEntityManager()->remove($this->rootEntity);
         } else {
