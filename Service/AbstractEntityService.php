@@ -827,6 +827,12 @@ abstract class AbstractEntityService extends AbstractService
                 }
             }
         }
+        if(isset($searchData['rows'])) {
+            unset($searchData['rows']);
+        }
+        if(isset($searchData['page'])) {
+            unset($searchData['page']);
+        }
 
         return $searchData;
     }
