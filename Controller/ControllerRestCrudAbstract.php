@@ -152,8 +152,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     public function deleteAction($id = null)
     {
         if ($id) {
-            $this->getService()->removeEntity($id);
-            return $this->renderJson();
+            return $this->renderJson($this->getService()->removeEntity($id));
         }
         throw new BadRequestHttpException();
     }

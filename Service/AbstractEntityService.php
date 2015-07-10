@@ -759,10 +759,19 @@ abstract class AbstractEntityService extends AbstractService
 
     public function checkStatusTuple($entity)
     {
-        return method_exists($entity, 'setStatusTuple') ? 'setStatusTuple' :
-        method_exists($entity, 'setIsActive') ? 'setIsActive' :
-        method_exists($entity, 'setFlActive') ? 'setFlActive' :
-        false;
+        if (method_exists($entity, 'setStatusTuple')) {
+            return 'setStatusTuple';
+        }
+
+        if (method_exists($entity, 'setIsActive')) {
+            return 'setIsActive';
+        }
+
+        if (method_exists($entity, 'setFlActive')) {
+            return 'setFlActive';
+        }
+
+        return false;
     }
 
     public function removeEntity($id)
@@ -773,10 +782,10 @@ abstract class AbstractEntityService extends AbstractService
         if (!$removeMethod) {
             $this->getEntityManager()->remove($this->rootEntity);
         } else {
-            if ($this->rootEntity->getStatusTuple() == 2) {
-                throw new \Exception('Este registro não é removível!');
-            }
             if ($removeMethod == 'setStatusTuple') {
+                if ($this->rootEntity->getStatusTuple() == 2) {
+                    throw new \Exception('Este registro não é removível!');
+                }
                 $this->rootEntity->$removeMethod(0);
             } else {
                 $this->rootEntity->$removeMethod(false);
