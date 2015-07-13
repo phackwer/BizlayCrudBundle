@@ -1,8 +1,6 @@
 <?php
 namespace SanSIS\CrudBundle\Service;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\IndexedReader;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
@@ -568,38 +566,11 @@ abstract class AbstractEntityService extends AbstractService
      */
     private function checkUnique(ServiceDto $dto)
     {
-        $reflx = new \ReflectionClass($this->getRootEntity());
-        $reader = new IndexedReader(new AnnotationReader());
-        $props = $reflx->getProperties();
-
-        foreach ($props as $prop) {
-            $annons = $reader->getPropertyAnnotations($prop);
-            if (isset($annons['Doctrine\ORM\Mapping\Column']->unique) && $annons['Doctrine\ORM\Mapping\Column']->unique) {
-                $getMethod = 'get' . ucfirst($prop->getName());
-                $uniqueParam = $this->getRootEntity()->$getMethod();
-                //verificar e adicionar o erro
-                $qb = $this->getRootRepository()->createQueryBuilder('u');
-                $qb->select('u.id')
-                   ->andWhere(
-                       $qb->expr()->eq('u.' . $prop->getName(), ':param')
-                   )
-                   ->setParameter('param', $uniqueParam);
-
-                $id = $this->getRootEntity()->getId();
-                if (is_null($id)) {
-                    $qb->andWhere(
-                        $qb->expr()->isNotNull('u.id')
-                    );
-                } else {
-                    $qb->andWhere(
-                           $qb->expr()->neq('u.id', ':id')
-                       )
-                       ->setParameter('id', $id);
-                }
-                if (count($qb->getQuery()->getOneOrNullResult())) {
-                    $attrName = $this->getJsonAttrTitle($this->getRootEntityName(), $prop->getName());
-                    $this->addError('verificação', 'Já existe o valor informado para ' . $attrName . '.');
-                }
+        $this->getRootRepository()->checkUnique($dto, $this->getRootEntity());
+        if ($this->getRootRepository()->hasErrors()) {
+            foreach ($this->getRootRepository()->getErrors() as $error) {
+                $error['message'] = str_replace($error['attr'], $this->getJsonAttrTitle($this->getRootEntityName(), $error['attr']), $error['message']);
+                $this->errors[] = $error;
             }
         }
     }
@@ -648,6 +619,16 @@ abstract class AbstractEntityService extends AbstractService
     }
 
     /**
+     * @TODO - Filtragem de white list para atributos que podem ser acessados pela Business
+     *
+     * @param  [type] $dto [description]
+     * @return [type]      [description]
+     */
+    public function filterWhiteList($dto)
+    {
+    }
+
+    /**
      * Método que realmente processa a população, validação, verificação,
      * uploads e persistência (nesta exata sequência) da entidade raiz
      *
@@ -660,6 +641,7 @@ abstract class AbstractEntityService extends AbstractService
     public function flushRootEntity(ServiceDto $dto)
     {
         $this->setRootEntityForFlush($dto);
+        $this->filterWhiteList($dto);
         $this->populateRootEntity($dto);
 
         $this->checkUnique($dto);
