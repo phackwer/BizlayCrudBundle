@@ -664,11 +664,6 @@ abstract class AbstractEntityService extends AbstractService
             throw new \SanSIS\CrudBundle\Service\Exception\HandleUploadsException($this->errors);
         }
 
-        $this->handleUploads($dto);
-        if ($this->hasErrors()) {
-            throw new \SanSIS\CrudBundle\Service\Exception\HandleUploadsException($this->errors);
-        }
-
         try {
             if (!$this->debug) {
                 // $this->persistEntity();
@@ -797,22 +792,14 @@ abstract class AbstractEntityService extends AbstractService
 
         $columns = $dto->request->has('columns') ? $dto->request->get('columns') : $dto->query->get('columns');
 
-        $searchData['orderby'] = '';
+        $searchData['orderBy'] = $dto->request->has('orderBy') ? $dto->request->get('orderBy') : $dto->query->get('orderBy');
 
-        $order = $dto->request->has('order') ? $dto->request->get('order') : $dto->query->get('order');
-        $and = '';
-        if ($order) {
-            foreach ($order as $k => $vals) {
-                if (isset($columns[$vals['column']]) && $columns[$vals['column']]['data'] != 'g.acoes') {
-                    $searchData['orderby'] .= $and . ($columns[$vals['column']]['name'] ? $columns[$vals['column']]['name'] : $columns[$vals['column']]['data']) . ' ' . $vals['dir'] . ' ';
-                    $and = ', ';
-                }
-            }
-        }
-        if(isset($searchData['rows'])) {
+        $searchData['sortOrder'] = $dto->request->has('sortOrder') ? $dto->request->get('sortOrder') : $dto->query->get('sortOrder');
+
+        if (isset($searchData['rows'])) {
             unset($searchData['rows']);
         }
-        if(isset($searchData['page'])) {
+        if (isset($searchData['page'])) {
             unset($searchData['page']);
         }
 
