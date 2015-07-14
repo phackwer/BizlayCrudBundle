@@ -398,6 +398,12 @@ abstract class AbstractEntityService extends AbstractService
                     $this->log('info', 'Tratando data para o formato do banco');
 
                     if ($value) {
+                        //Melhorar isto depois, pelamordedeus
+                        if (strstr($value, 'T')) {
+                            $value = explode('T', $value);
+                            $time = explode('-', $value[1]);
+                            $value = $value[0] . ' ' . $time[0];
+                        }
                         if (strstr($value, '/')) {
                             if (strstr($value, ':')) {
                                 $value = $class::createFromFormat('d/m/Y H:i:s', $value);

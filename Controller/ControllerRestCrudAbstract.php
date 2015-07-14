@@ -56,7 +56,8 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         $start = ($page * $rows) - $rows;
         $start = ($start >= 0) ? $start : 0;
         $query->setFirstResult($start)
-              ->setMaxResults($rows);
+              ->setMaxResults($rows)
+              ->setHydrationMode(Query::HYDRATE_OBJECT);
 
         $pagination = new Paginator($query, true);
 
@@ -90,6 +91,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
+            $item = $item->toArray();
             $array[$k] = $item;
             $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item['id'], $item);
         }
