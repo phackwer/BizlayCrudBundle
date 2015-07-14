@@ -401,7 +401,11 @@ abstract class AbstractEntityService extends AbstractService
                         //Melhorar isto depois, pelamordedeus
                         if (strstr($value, 'T')) {
                             $value = explode('T', $value);
-                            $time = explode('-', $value[1]);
+                            if (strstr($value[1], '.')) {
+                                $time = explode('.', $value[1]);
+                            } else {
+                                $time = explode('-', $value[1]);
+                            }
                             $value = $value[0] . ' ' . $time[0];
                         }
                         if (strstr($value, '/')) {
