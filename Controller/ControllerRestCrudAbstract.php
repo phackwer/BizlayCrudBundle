@@ -91,9 +91,8 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            // $item = $item->toArray();
-            $array[$k] = $item;
-            // $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
+            $array[$k]['data'] = $item;
+            $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
         }
 
         return $array;
@@ -102,7 +101,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     /**
      * Sobrescreva este método para definir os níveis de acesso na listagem retornada.
      * @param  int   $id   id do item
-     * @param  array $item linha completa referente ao item
+     * @param  $item linha completa referente ao item
      * @return array       array de níveis de acesso para utilização no clientSide
      */
     public function getUserAccessLevels($item)
@@ -156,8 +155,8 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      */
     public function deleteAction($id = null)
     {
-        if ($id) {
-            return $this->renderJson($this->getService()->removeEntity($id));
+        if ($this->getService()->removeEntity($id)) {
+            return $this->renderJson(true);
         }
         throw new BadRequestHttpException();
     }
