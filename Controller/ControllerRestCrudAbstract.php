@@ -91,9 +91,9 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            $item = $item->toArray();
+            // $item = $item->toArray();
             $array[$k] = $item;
-            $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item['id'], $item);
+            // $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
         }
 
         return $array;
@@ -105,23 +105,26 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      * @param  array $item linha completa referente ao item
      * @return array       array de níveis de acesso para utilização no clientSide
      */
-    public function getUserAccessLevels($id, $item)
+    public function getUserAccessLevels($item)
     {
         return array(
-            'edit' => $this->getService()->checkUserEditPermission($id, $item),
-            'view' => $this->getService()->checkUserViewPermission($id, $item),
-            'del' => $this->getService()->checkUserDeletePermission($id, $item),
+            'edit' => $this->getService()->checkUserEditPermission($item),
+            'view' => $this->getService()->checkUserViewPermission($item),
+            'del' => $this->getService()->checkUserDeletePermission($item),
         );
     }
 
     /**
      * Action que deve ser mapeada para realizar a pesquisa e popular uma grid
+     * Nos casos em que estiver utilizando objetos cuja politica de exclusão
+     * esteja definida como todos, redeclare a action definindo os objetos a
+     * serem expostos explícitamente.
      *
+     * @Rest\View
      */
     public function getSearchAction()
     {
-        $data = $this->getGridData();
-        return $this->renderJson($data);
+        return $this->getGridData();
     }
 
     /**

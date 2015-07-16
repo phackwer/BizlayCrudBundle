@@ -756,7 +756,6 @@ abstract class AbstractEntityService extends AbstractService
 
     public function removeEntity($id)
     {
-
         $this->getRootEntity($id);
         $removeMethod = $this->getRemoveMethod($this->getRootEntity());
         if (!$removeMethod) {
@@ -845,31 +844,28 @@ abstract class AbstractEntityService extends AbstractService
      * Métodos para auxiliar a verificação da permissão de um usuário para determinada ação
      * Devem ser sobrescritos
      *
-     * @param  [type] $id   [description]
      * @param  [type] $item [description]
      * @return [type]       [description]
      */
-    public function checkUserEditPermission($id, $item)
+    public function checkUserEditPermission($item)
     {
         return true;
     }
 
     /**
-     * @param  [type] $id   [description]
      * @param  [type] $item [description]
      * @return [type]       [description]
      */
-    public function checkUserViewPermission($id, $item)
+    public function checkUserViewPermission($item)
     {
         return true;
     }
 
     /**
-     * @param  [type] $id   [description]
      * @param  [type] $item [description]
      * @return [type]       [description]
      */
-    public function checkUserDeletePermission($id, $item)
+    public function checkUserDeletePermission($item)
     {
         return true;
     }
