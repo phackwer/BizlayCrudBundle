@@ -91,7 +91,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            $array[$k]['data'] = $item;
+            $array[$k] = $item->toArray();
             $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
         }
 
