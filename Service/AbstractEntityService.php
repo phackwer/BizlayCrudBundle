@@ -266,10 +266,15 @@ abstract class AbstractEntityService extends AbstractService
             $entity = $newClass;
             $setParentMethod = null;
         } else {
-            if (isset($values['id']) && trim($values['id']) != '') {
-                $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array('id' => $values['id']));
+            //Colocar a busca da PK no Metadata da entidade
+            $metadata = $this->getEntityManager()->getClassMetadata($newClass);
+            //alterar verificação da verdade do id, e então processar o load da entidade
+            $identifier = $metadata->getIdentifier()[0] ? $metadata->getIdentifier()[0] : 'id';
+
+            if (isset($values[$identifier]) && trim($values[$identifier]) != '') {
+                $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array($identifier => $values[$identifier]));
                 if (!$entity) {
-                    $this->log('error', 'Entidade inexistente no banco de dados : ' . $newClass . '::id = ' . $values['id']);
+                    $this->log('error', 'Entidade inexistente no banco de dados : ' . $newClass . '::' . $identifier . ' = ' . $values[$identifier]);
                     echo '<pre>';
                     echo ">>>>>Este erro jamais deve acontecer. Revise o mapeamento<<<<\n";
                     echo '>>>>>Entidade não existente no banco de dados!!!!' . $entity . "<<<<\n";
@@ -279,7 +284,7 @@ abstract class AbstractEntityService extends AbstractService
                     die('Este erro jamais deve acontecer. Revise o mapeamento');
                 };
                 if (method_exists($entity, 'setTerm')) {
-                    $this->log('info', 'Entidade de tabela de apoio : ' . $newClass . '::id = ' . $values['id']);
+                    $this->log('info', 'Entidade de tabela de apoio : ' . $newClass . '::' . $identifier . ' = ' . $values[$identifier]);
                     return $entity;
                 }
             } else {
@@ -481,7 +486,7 @@ abstract class AbstractEntityService extends AbstractService
                     $value = $this->populateEntities($value, $class, $entity);
                 } else if ($class && strstr($strAttr, 'OneToOne')) {
                     $this->log('info', 'Populando OneToOne');
-                    if (isset($value['id']) || isset($value['idDel'])) {
+                    if (isset($value[$identifier]) || isset($value['idDel'])) {
                         $value = $this->populateEntities($value, $class, $entity);
                         if (is_object($value)) {
                             $this->getEntityManager()->persist($value);
@@ -492,17 +497,23 @@ abstract class AbstractEntityService extends AbstractService
                         $value = $entity->$getMethod();
                     }
                 } else if ($class && strstr($strAttr, 'ToOne')) {
+
+                    //Colocar a busca da PK no Metadata da entidade
+                    $metadata = $this->getEntityManager()->getClassMetadata($class);
+                    //alterar verificação da verdade do id, e então processar o load da entidade
+                    $classId = $metadata->getIdentifier()[0] ? $metadata->getIdentifier()[0] : 'id';
+
                     $this->log('info', 'Populando ManyToOne');
-                    if (is_array($value) && array_key_exists('id', $value)) {
-                        if (isset($value['id']) && !is_null($value['id']) && trim($value['id']) !== '') {
-                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array('id' => $value['id']));
+                    if (is_array($value) && array_key_exists($classId, $value)) {
+                        if (isset($value[$classId]) && !is_null($value[$classId]) && trim($value[$classId]) !== '') {
+                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value[$classId]));
                         } else {
                             $value = null;
                         }
 
                     } else {
                         if (!is_null($value) && !empty($value)) {
-                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array('id' => $value));
+                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value));
                         } else {
                             $value = null;
                         }
