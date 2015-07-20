@@ -258,7 +258,7 @@ abstract class AbstractEntityService extends AbstractService
         if ($parent && isset($values['idDel']) && $values['idDel']) {
             $this->log('info', 'Marcando subentidade para exclusão : ' . $newClass);
             $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array('id' => $values['idDel']));
-            $this->getEntityManager()->remove($entity);
+            $this->setEntityForRemoval($entity);
             return null;
         }
 
@@ -765,22 +765,28 @@ abstract class AbstractEntityService extends AbstractService
         );
     }
 
-    public function removeEntity($id)
+    public function setEntityForRemoval($entity)
     {
-        $this->getRootEntity($id);
-        $removeMethod = $this->getRemoveMethod($this->getRootEntity());
+        $removeMethod = $this->getRemoveMethod($entity);
         if (!$removeMethod) {
-            $this->getEntityManager()->remove($this->rootEntity);
+            $this->getEntityManager()->remove($entity);
         } else {
             if ($removeMethod == 'setStatusTuple') {
-                if ($this->rootEntity->getStatusTuple() == 2) {
+                if ($entity->getStatusTuple() == 2) {
                     throw new \Exception('Este registro não é removível!');
                 }
-                $this->rootEntity->$removeMethod(0);
+                $entity->$removeMethod(0);
             } else {
-                $this->rootEntity->$removeMethod(false);
+                $entity->$removeMethod(false);
             }
+            $this->getEntityManager()->persist($entity);
         }
+    }
+
+    public function removeEntity($id)
+    {
+        $entity = $this->getRootEntity($id);
+        $this->setEntityForRemoval($entity);
         $this->getEntityManager()->flush();
 
         return true;
