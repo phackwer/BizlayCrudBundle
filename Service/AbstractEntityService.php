@@ -258,7 +258,9 @@ abstract class AbstractEntityService extends AbstractService
         if ($parent && isset($values['idDel']) && $values['idDel']) {
             $this->log('info', 'Marcando subentidade para exclusão : ' . $newClass);
             $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array('id' => $values['idDel']));
-            $this->setEntityForRemoval($entity);
+            if ($entity) {
+                $this->setEntityForRemoval($entity);
+            }
             return null;
         }
 
