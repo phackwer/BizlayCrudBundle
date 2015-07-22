@@ -1,7 +1,6 @@
 <?php
 namespace SanSIS\CrudBundle\Service;
 
-use Symfony\Component\Config\Definition\Exception\Exception;
 use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
 use \SanSIS\BizlayBundle\Service\AbstractService;
@@ -9,12 +8,15 @@ use \SanSIS\BizlayBundle\Service\ServiceDto;
 use \SanSIS\CrudBundle\Service\Exception\ValidationException;
 use \SanSIS\CrudBundle\Service\Exception\WrongTypeRootEntityException;
 
+
 /**
- * @TODO Tratar Files no upload - deverá ser antes do flush para utilizar a
- * mesma transaction e ter, de alguma forma, a remoção dos arquivos subidos
- * em caso de exceção
+ * Class AbstractEntityService
  *
- * @author phackwer
+ * Service genérica para lidar com entidades doctrine
+ * Automatiza e padroniza o comportamento e código de
+ * quaisquer cruds necessários.
+ *
+ * @package SanSIS\CrudBundle\Service
  */
 abstract class AbstractEntityService extends AbstractService
 {

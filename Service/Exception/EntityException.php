@@ -4,12 +4,17 @@ namespace SanSIS\CrudBundle\Service\Exception;
 
 class EntityException extends \Exception
 {
-    protected $message = 'CrudBundle - Service - Erros na validação dos dados de entrada';
+    protected $message = '';
 
     private $errors = array();
 
     public function __construct($errors = array(), $message = "", $code = 0, Exception $previous = null)
     {
+        $pipe = '';
+        foreach ($errors as $error) {
+            $this->message .= $pipe.$error['message'] ;
+            $pipe = '|';
+        }
         $this->setErrors($errors);
     }
 

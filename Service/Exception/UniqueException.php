@@ -10,8 +10,10 @@ class UniqueException extends \Exception
 
     public function __construct($errors = array(), $message = "", $code = 0, Exception $previous = null)
     {
-        foreach($errors as $error){
-            $this->message .= $error['message']."\n";
+        $pipe = '';
+        foreach ($errors as $error) {
+            $this->message .= $pipe.$error['message'] ;
+            $pipe = '|';
         }
         $this->setErrors($errors);
     }
