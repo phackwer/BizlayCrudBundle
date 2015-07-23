@@ -566,7 +566,8 @@ abstract class AbstractEntityService extends AbstractService
                     //Colocar a busca da PK no Metadata da entidade
                     $metadata = $this->getEntityManager()->getClassMetadata($class);
                     //alterar verificação da verdade do id, e então processar o load da entidade
-                    $classId = $metadata->getIdentifier()[0] ? $metadata->getIdentifier()[0] : 'id';
+                    $getIdent = $metadata->getIdentifier();
+                    $classId = isset($getIdent[0]) ? $getIdent[0] : 'id';
 
                     $this->log('info', 'Populando ManyToOne');
                     if (is_array($value) && array_key_exists($classId, $value)) {
