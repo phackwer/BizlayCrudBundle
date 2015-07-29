@@ -1,6 +1,11 @@
 <?php
 namespace SanSIS\CrudBundle\Controller;
 
+use SanSIS\CrudBundle\Service\Exception\EntityException;
+use SanSIS\CrudBundle\Service\Exception\HandleUploadsException;
+use SanSIS\CrudBundle\Service\Exception\UniqueException;
+use SanSIS\CrudBundle\Service\Exception\ValidationException;
+use SanSIS\CrudBundle\Service\Exception\VerificationException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
@@ -145,8 +150,20 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      */
     public function postSaveAction()
     {
-        $this->getService()->save($this->getDto());
-        return $this->renderJson($this->getSavedId());
+        try {
+            $this->getService()->save($this->getDto());
+            return $this->renderJson($this->getSavedId());
+        } catch (UniqueException $e) {
+            throw new BadRequestHttpException ($e->getMessage());
+        } catch (ValidationException $e) {
+            throw new BadRequestHttpException ($e->getMessage());
+        } catch (VerificationException $e) {
+            throw new BadRequestHttpException ($e->getMessage());
+        } catch (HandleUploadsException $e) {
+            throw new BadRequestHttpException ($e->getMessage());
+        } catch (EntityException $e) {
+            throw new BadRequestHttpException ($e->getMessage());
+        }
     }
 
     /**
@@ -155,9 +172,14 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      */
     public function deleteAction($id = null)
     {
-        if ($this->getService()->removeEntity($id)) {
-            return $this->renderJson(true);
+        try {
+            if ($this->getService()->removeEntity($id)) {
+                return $this->renderJson(true);
+            }
+        } catch (\Exception $e) {
+            throw new BadRequestHttpException ($e->getMessage());
         }
+
         throw new BadRequestHttpException();
     }
 }
