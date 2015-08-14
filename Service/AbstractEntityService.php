@@ -938,6 +938,13 @@ abstract class AbstractEntityService extends AbstractService
         return $this->getRootRepository()->getAllSearchData($searchData);
     }
 
+    public function getAllObjSearchData(ServiceDto $dto)
+    {
+        $searchData = $this->filterSearchData($dto);
+
+        return $this->getRootRepository()->getAllSearchData($searchData);
+    }
+
     /**
      * Permite que outras entidades sejam consultadas para apresentação no grid de resposta
      *
