@@ -942,7 +942,7 @@ abstract class AbstractEntityService extends AbstractService
     {
         $searchData = $this->filterSearchData($dto);
 
-        return $this->getRootRepository()->getAllSearchData($searchData);
+        return $this->getRootRepository()->getAllObjSearchData($searchData);
     }
 
     /**
