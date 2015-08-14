@@ -1,6 +1,7 @@
 <?php
 namespace SanSIS\CrudBundle\Service;
 
+use Doctrine\Common\Inflector\Inflector;
 use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
 use \SanSIS\BizlayBundle\Service\AbstractService;
@@ -333,7 +334,6 @@ abstract class AbstractEntityService extends AbstractService
 
             $class = $class[count($class) - 1];
 
-            $setParentMethod = 'setId' . $class;
             try {
                 $ref = new \ReflectionClass($entity);
             } catch (\Exception $e) {
@@ -347,9 +347,28 @@ abstract class AbstractEntityService extends AbstractService
                 die('Este erro jamais deve acontecer. Revise o mapeamento');
             }
             $this->log('info', 'Resolvendo relacionamentos da entidade acima com sua subentidade: ' . $newClass);
-            if (!method_exists($entity, $setParentMethod)) {
-                $setParentMethod = 'set' . $class;
+
+            /**
+             * Lord of Earth and Heaven, forgive this horse
+             */
+            $setParentMethod = '';
+            $methods = $ref->getMethods();
+            foreach($methods as $method) {
+                $param = current($ref->getMethod($method->name)->getParameters());
+                if(is_object($param)) {
+                    if (is_object( $param->getClass())) {
+                        $parClass = $param->getClass()->name;
+                        if ($parClass) {
+                            $parClass = explode('\\', $parClass);
+                            $parClass = $parClass[count($parClass) - 1];
+                            if ($parClass == $class) {
+                                $setParentMethod = $method->name;
+                            }
+                        }
+                    }
+                }
             }
+
             $strDoc = '';
             if (method_exists($entity, $setParentMethod)) {
                 $strDoc = $ref->getMethod($setParentMethod)->getDocComment();
@@ -451,7 +470,16 @@ abstract class AbstractEntityService extends AbstractService
 
                 $params = $ref->getMethod($method)->getParameters();
                 $strDoc = $ref->getMethod($method)->getDocComment();
-                $strAttr = $ref->getProperty($attr)->getDocComment();
+                try {
+                    $strAttr = $ref->getProperty($attr)->getDocComment();
+                } catch(\Exception $e) {
+                    try {
+                        $strAttr = $ref->getProperty($this->toCamelCase($attr))->getDocComment();
+                    } catch(\Exception $e) {
+                        throw new \Exception('É, amigo desenvolvedor. Se você chegou a receber esta exception, por favor,
+                        corrija seu modelo. Classe e atributo com problemas. '. get_class($entity).'->'.$attr);
+                    }
+                }
                 $class = '';
 
                 if ($params[0]->getClass()) {
@@ -502,6 +530,9 @@ abstract class AbstractEntityService extends AbstractService
                     $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
                     $class = substr($begin, 0, strpos($begin, "\n"));
                     $method = str_replace('set', 'add', $method);
+                    if (!method_exists($entity, $method)) {
+                        $method = Inflector::singularize($method);
+                    }
                     $allInt = true;
                     foreach ($value as $key => $val) {
                         if (!is_int($key)) {
