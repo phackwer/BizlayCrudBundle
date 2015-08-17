@@ -61,8 +61,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         $start = ($page * $rows) - $rows;
         $start = ($start >= 0) ? $start : 0;
         $query->setFirstResult($start)
-              ->setMaxResults($rows)
-              ->setHydrationMode(Query::HYDRATE_OBJECT);
+              ->setMaxResults($rows);
 
         $pagination = new Paginator($query, true);
 

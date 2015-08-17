@@ -104,6 +104,7 @@ abstract class AbstractEntityService extends AbstractService
      */
     public function getRootEntityData($id = null)
     {
+//        \Doctrine\Common\Util\Debug::dump($this->getRootEntity($id));
         return $this->getRootEntity($id)->toArray();
     }
 
@@ -496,27 +497,29 @@ abstract class AbstractEntityService extends AbstractService
                     $this->log('info', 'Tratando data para o formato do banco');
 
                     if ($value) {
-                        //Melhorar isto depois, pelamordedeus
-                        if (strstr($value, 'T')) {
-                            $value = explode('T', $value);
-                            if (strstr($value[1], '.')) {
-                                $time = explode('.', $value[1]);
-                            } else {
-                                $time = explode('-', $value[1]);
+                        if (!$value instanceof \DateTime) {
+                            //Melhorar isto depois, pelamordedeus
+                            if (strstr($value, 'T')) {
+                                $value = explode('T', $value);
+                                if (strstr($value[1], '.')) {
+                                    $time = explode('.', $value[1]);
+                                } else {
+                                    $time = explode('-', $value[1]);
+                                }
+                                $value = $value[0] . ' ' . $time[0];
                             }
-                            $value = $value[0] . ' ' . $time[0];
-                        }
-                        if (strstr($value, '/')) {
-                            if (strstr($value, ':')) {
-                                $value = $class::createFromFormat('d/m/Y H:i:s', $value);
+                            if (strstr($value, '/')) {
+                                if (strstr($value, ':')) {
+                                    $value = $class::createFromFormat('d/m/Y H:i:s', $value);
+                                } else {
+                                    $value = $class::createFromFormat('d/m/Y', $value);
+                                }
                             } else {
-                                $value = $class::createFromFormat('d/m/Y', $value);
-                            }
-                        } else {
-                            if (strstr($value, ':')) {
-                                $value = $class::createFromFormat('Y-m-d H:i:s', $value);
-                            } else {
-                                $value = $class::createFromFormat('Y-m-d', $value);
+                                if (strstr($value, ':')) {
+                                    $value = $class::createFromFormat('Y-m-d H:i:s', $value);
+                                } else {
+                                    $value = $class::createFromFormat('Y-m-d', $value);
+                                }
                             }
                         }
                     } else {
