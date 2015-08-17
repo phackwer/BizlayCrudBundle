@@ -45,6 +45,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
     /**
      * Realiza a pesquisa paginada
+     * IMPORTANTE: definir o hydration mode em sua repository (QUERY::HYDRATE_ARRAY), pois afeta a performance
      * @return \StdClass
      */
     public function getGridData($searchQueryMethod = 'searchQuery', $prepareGridRowsMethod = 'prepareGridRows')
@@ -95,10 +96,25 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            $array[$k] = $item->toArray();
+            $array[$k] = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item;
             $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
         }
 
+        return $array;
+    }
+
+    /**
+     * Prepara a resposta para o Grid processando cada uma das linhas retornadas
+     * @param $pagination
+     * @return array
+     */
+    public function emptyPrepareRow($pagination)
+    {
+        $array = array();
+
+        foreach ($pagination as $k => $item) {
+            $array[$k] = $item;
+        }
         return $array;
     }
 
