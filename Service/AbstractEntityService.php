@@ -525,6 +525,11 @@ abstract class AbstractEntityService extends AbstractService
 
                     if ($value) {
                         if (!$value instanceof \DateTime) {
+                            if (is_array($value)) {
+                                if (isset($value['date'])) {
+                                    $value = $value['date'];
+                                }
+                            }
                             //Melhorar isto depois, pelamordedeus
                             if (strstr($value, 'T')) {
                                 $value = explode('T', $value);
@@ -537,13 +542,21 @@ abstract class AbstractEntityService extends AbstractService
                             }
                             if (strstr($value, '/')) {
                                 if (strstr($value, ':')) {
-                                    $value = $class::createFromFormat('d/m/Y H:i:s', $value);
+                                    if (strstr($value, '.')) {
+                                        $value = $class::createFromFormat('d/m/Y H:i:s.u', $value);
+                                    } else {
+                                        $value = $class::createFromFormat('d/m/Y H:i:s', $value);
+                                    }
                                 } else {
                                     $value = $class::createFromFormat('d/m/Y', $value);
                                 }
                             } else {
                                 if (strstr($value, ':')) {
-                                    $value = $class::createFromFormat('Y-m-d H:i:s', $value);
+                                    if (strstr($value, '.')) {
+                                        $value = $class::createFromFormat('Y-m-d H:i:s.u', $value);
+                                    } else {
+                                        $value = $class::createFromFormat('Y-m-d H:i:s', $value);
+                                    }
                                 } else {
                                     $value = $class::createFromFormat('Y-m-d', $value);
                                 }
