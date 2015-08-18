@@ -249,6 +249,61 @@ abstract class AbstractEntityService extends AbstractService
         }
     }
 
+    public function getEntityByIdentifierValue(&$newClass, &$values)
+    {
+        //Colocar a busca da PK no Metadata da entidade
+        $metadata = $this->getEntityManager()->getClassMetadata($newClass);
+        //alterar verificação da verdade do id, e então processar o load da entidade
+        $getIdent = $metadata->getIdentifier();
+        $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
+
+        $idValue = null;
+        if (isset($values[$this->toCamelCase($identifier)]) && trim($values[$this->toCamelCase($identifier)]) != '') {
+            $idValue = $values[$this->toCamelCase($identifier)];
+
+        } else if (isset($values[$this->toSnakeCase($identifier)]) && trim($values[$this->toSnakeCase($identifier)]) != '') {
+            $idValue = $values[$this->toSnakeCase($identifier)];
+        }
+
+//        if ($identifier == 'co_upload_file') {
+//            echo $identifier."\n";
+//            echo $this->toCamelCase($identifier)."\n";
+//            var_dump($values);
+//            echo $idValue;
+//            die (1234);
+//        }
+
+        /**
+         * Checa se entidade existe no banco de dados
+         */
+        if ($idValue) {
+            $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array($identifier => $idValue));
+            if (!$entity) {
+                $this->log('error', 'Entidade inexistente no banco de dados : ' . $newClass . '::' . $identifier . ' = ' . $idValue);
+                echo '<pre>';
+                echo ">>>>>Este erro jamais deve acontecer. Revise o mapeamento<<<<\n";
+                echo '>>>>>Entidade não existente no banco de dados!!!!' . $entity . "<<<<\n";
+                echo '>>>>>' . $newClass . "<<<<\n";
+                print_r($values);
+                print_r($_POST);
+                die('Este erro jamais deve acontecer. Revise o mapeamento');
+            };
+            if (method_exists($entity, 'setTerm')) {
+                $this->log('info', 'Entidade de tabela de apoio : ' . $newClass . '::' . $identifier . ' = ' . $idValue);
+                return $entity;
+            }
+        }
+        /**
+         * Cria uma nova se não foi passado um id
+         */
+        else {
+            $this->log('info', 'Criando subentidade para ser populada: ' . $newClass);
+            $newClass = str_replace("\r", '', $newClass);
+            $entity = new $newClass();
+        }
+        return $entity;
+    }
+
     /**
      * Método qque popula a entidade com os dados oriundos do formulário
      *
@@ -289,40 +344,7 @@ abstract class AbstractEntityService extends AbstractService
             /**
              * @ TODO 3 - Transformar em método
              */
-            //Colocar a busca da PK no Metadata da entidade
-            $metadata = $this->getEntityManager()->getClassMetadata($newClass);
-            //alterar verificação da verdade do id, e então processar o load da entidade
-            $getIdent = $metadata->getIdentifier();
-            $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
-
-            /**
-             * Checa se entidade existe no banco de dados
-             */
-            if (isset($values[$identifier]) && trim($values[$identifier]) != '') {
-                $entity = $this->getEntityManager()->getRepository($newClass)->findOneBy(array($identifier => $values[$identifier]));
-                if (!$entity) {
-                    $this->log('error', 'Entidade inexistente no banco de dados : ' . $newClass . '::' . $identifier . ' = ' . $values[$identifier]);
-                    echo '<pre>';
-                    echo ">>>>>Este erro jamais deve acontecer. Revise o mapeamento<<<<\n";
-                    echo '>>>>>Entidade não existente no banco de dados!!!!' . $entity . "<<<<\n";
-                    echo '>>>>>' . $newClass . "<<<<\n";
-                    print_r($values);
-                    print_r($_POST);
-                    die('Este erro jamais deve acontecer. Revise o mapeamento');
-                };
-                if (method_exists($entity, 'setTerm')) {
-                    $this->log('info', 'Entidade de tabela de apoio : ' . $newClass . '::' . $identifier . ' = ' . $values[$identifier]);
-                    return $entity;
-                }
-            }
-            /**
-             * Cria uma nova se não foi passado um id
-             */
-            else {
-                $this->log('info', 'Criando subentidade para ser populada: ' . $newClass);
-                $newClass = str_replace("\r", '', $newClass);
-                $entity = new $newClass();
-            }
+            $entity = $this->getEntityByIdentifierValue($newClass, $values);
             /****** fim @TODO 3 ****/
 
             /**
@@ -477,8 +499,13 @@ abstract class AbstractEntityService extends AbstractService
                     try {
                         $strAttr = $ref->getProperty($this->toCamelCase($attr))->getDocComment();
                     } catch(\Exception $e) {
-                        throw new \Exception('É, amigo desenvolvedor. Se você chegou a receber esta exception, por favor,
-                        corrija seu modelo. Classe e atributo com problemas. '. get_class($entity).'->'.$attr);
+
+                        try {
+                            $strAttr = $ref->getProperty($this->toSnakeCase($attr))->getDocComment();
+                        } catch(\Exception $e) {
+                            throw new \Exception('É, amigo desenvolvedor. Se você chegou a receber esta exception, por favor,
+                            corrija seu modelo. Classe e atributo com problemas. ' . get_class($entity) . '->' . $attr);
+                        }
                     }
                 }
                 $class = '';
