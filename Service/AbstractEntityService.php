@@ -230,6 +230,7 @@ abstract class AbstractEntityService extends AbstractService
                 echo highlight_string("<?php \n\n" . var_export($this->getRootEntity()->toArray(), true));
             }
         } catch (\Exception $e) {
+            throw $e;
             echo 'ERRO:';
             echo $e->getMessage();
             if (!$this->debug) {
@@ -245,12 +246,13 @@ abstract class AbstractEntityService extends AbstractService
             }
             echo "\n\n\nERRO Como a entidade foi populada: \n";
             echo highlight_string("<?php \n\n" . var_export($this->getRootEntity()->toArray(), true));
-            die;
+            throw $e;
         }
     }
 
     public function getEntityByIdentifierValue(&$newClass, &$values)
     {
+        $this->log('info', 'Obtendo as chaves primárias para '.$newClass);
         //Colocar a busca da PK no Metadata da entidade
         $metadata = $this->getEntityManager()->getClassMetadata($newClass);
         //alterar verificação da verdade do id, e então processar o load da entidade
@@ -515,10 +517,11 @@ abstract class AbstractEntityService extends AbstractService
 
                 if ($params[0]->getClass()) {
                     $this->log('info', get_class($entity) . '::' . $method . '(' . $params[0]->getClass() . ')');
+                    $class = $params[0]->getClass()->getName();
 
-                    $bpos = strpos($strDoc, '@param ') + 7;
-                    $epos = strpos($strDoc, ' $') - $bpos;
-                    $class = substr($strDoc, $bpos, $epos);
+//                    $bpos = strpos($strDoc, '@param ') + 7;
+//                    $epos = strpos($strDoc, ' $') - $bpos;
+//                    $class = substr($strDoc, $bpos, $epos);
                 }
 
                 if (strstr($strDoc, '\DateTime') || $class == 'DateTime') {
@@ -853,7 +856,10 @@ abstract class AbstractEntityService extends AbstractService
             }
         } catch (\Exception $e) {
             $this->errors = array_merge($this->getRootEntity()->getErrors(), $this->errors);
-            throw new \SanSIS\CrudBundle\Service\Exception\EntityException($this->errors);
+            if (count($this->errors)) {
+                throw new \SanSIS\CrudBundle\Service\Exception\EntityException($this->errors);
+            }
+            throw $e;
         }
     }
 
