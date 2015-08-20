@@ -446,7 +446,9 @@ abstract class AbstractEntityService extends AbstractService
                 /**
                  * @TODO 8 - Converter em método, checagem dos dados inseridos contra métodos existentes
                  */
-                $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($values, true));
+                if ($this->debug) {
+                    $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($values, true));
+                }
                 $attr = lcfirst(substr($method, 3));
                 $snat = $this->toSnakeCase($attr); //ARGH!!!!! Xys!!!!
                 try {
@@ -480,7 +482,6 @@ abstract class AbstractEntityService extends AbstractService
                         return null;
                     }
                 } catch (\Exception $e) {
-                    var_dump($values);
                     $this->log('error', 'Houve algum erro ao tentar lidar com os dados submetidos ' . var_export($values, true));
                     throw $e;
                 }
@@ -489,7 +490,9 @@ abstract class AbstractEntityService extends AbstractService
                     $value = trim($value);
                 }
 
-                $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($value, true));
+                if ($this->debug) {
+                    $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($value, true));
+                }
 
                 $params = $ref->getMethod($method)->getParameters();
                 $strDoc = $ref->getMethod($method)->getDocComment();
@@ -848,9 +851,9 @@ abstract class AbstractEntityService extends AbstractService
                 // $this->persistEntity();
                 $this->getEntityManager()->flush();
             }
-        } catch (\SanSIS\BizlayBundle\Entity\Exception\ValidationException $e) {
+        } catch (\Exception $e) {
             $this->errors = array_merge($this->getRootEntity()->getErrors(), $this->errors);
-            throw new \SanSIS\CrudBundle\Service\Exception\EntityException();
+            throw new \SanSIS\CrudBundle\Service\Exception\EntityException($this->errors);
         }
     }
 
