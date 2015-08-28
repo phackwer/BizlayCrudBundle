@@ -197,4 +197,29 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
         throw new BadRequestHttpException();
     }
+
+    /**
+     * Tratamento para a saída do autocomplete, caso nenhum resultado for encontrado
+     * @param array $results
+     * @return array
+     */
+    private function treatNoResultsInAutocomplete(array $results)
+    {
+        if(empty($results)){
+            return array(
+                array(
+                    'name' => 'Nenhum resultado foi encontrado.'
+                )
+            );
+        }
+        return $results;
+    }
+
+    public function getAutocompleteAction()
+    {
+
+        return $this->treatNoResultsInAutocomplete(
+            $this->getService()->getAllObjSearchData($this->getDto())
+        );
+    }
 }
