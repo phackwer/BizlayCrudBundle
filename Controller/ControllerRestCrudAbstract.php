@@ -203,7 +203,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      * @param array $results
      * @return array
      */
-    private function treatNoResultsInAutocomplete(array $results)
+    protected function treatNoResultsInAutocomplete(array $results)
     {
         if(empty($results)){
             return array(
