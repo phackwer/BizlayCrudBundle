@@ -48,7 +48,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      * IMPORTANTE: definir o hydration mode em sua repository (QUERY::HYDRATE_ARRAY), pois afeta a performance
      * @return \StdClass
      */
-    public function getGridData($searchQueryMethod = 'searchQuery', $prepareGridRowsMethod = 'prepareGridRows')
+    public function getGridData($searchQueryMethod = 'searchQuery', $prepareGridRowsMethod = 'prepareGridRows', $hydration_mode = null)
     {
         // Busca a query que será utilizada na pesquisa para a grid
         $query = $this->getService()->$searchQueryMethod($this->getDto());
@@ -63,6 +63,10 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         $start = ($start >= 0) ? $start : 0;
         $query->setFirstResult($start)
               ->setMaxResults($rows);
+
+        if ($hydration_mode) {
+            $query->setHydrationMode($hydration_mode);
+        }
 
         $pagination = new Paginator($query, true);
 
@@ -217,7 +221,6 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
 
     public function getAutocompleteAction()
     {
-
         return $this->treatNoResultsInAutocomplete(
             $this->getService()->getAllObjSearchData($this->getDto())
         );
