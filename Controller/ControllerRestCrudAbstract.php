@@ -225,4 +225,24 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             $this->getService()->getAllObjSearchData($this->getDto())
         );
     }
+
+    /**
+     * Exporta os dados de uma grid com a pesquisa para um Excel
+     */
+    public function exportExcelAction()
+    {
+        //Obtém lista completa da service
+        $arr = $this->getService()->getAllSearchData($this->getDto());
+        $this->renderExcel($arr);
+    }
+
+    /**
+     * Exporta os dados de uma grid com a pesquisa para um PDF
+     */
+    public function exportPdfAction()
+    {
+        //Obtém lista completa da service
+        $arr = $this->getService()->getAllSearchData($this->getDto());
+        return $this->renderPdf($arr);
+    }
 }
