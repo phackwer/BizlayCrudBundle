@@ -187,7 +187,8 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
         //quantidade de linhas a serem retornadas por página
         $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length') : $this->getDto()->request->get('length');
         $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
-              ->setMaxResults($rows);
+            ->setMaxResults($rows);
+        $query->setHydrationMode(Query::HYDRATE_OBJECT);
 
         $pagination = new Paginator($query, true);
 
@@ -219,6 +220,7 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
             //Obscurece os ids dos itens listados:
             $item = $this->obfuscateIds($item);
             //Cria um item no array de resposta
+            $item = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item;
             $array[$k]['g'] = $item;
             $array[$k]['g']['acoes'] = $this->getGridActions($item['id'], $item);
         }

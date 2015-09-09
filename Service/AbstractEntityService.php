@@ -9,7 +9,6 @@ use \SanSIS\BizlayBundle\Service\ServiceDto;
 use \SanSIS\CrudBundle\Service\Exception\ValidationException;
 use \SanSIS\CrudBundle\Service\Exception\WrongTypeRootEntityException;
 
-
 /**
  * Class AbstractEntityService
  *
@@ -252,7 +251,7 @@ abstract class AbstractEntityService extends AbstractService
 
     public function getEntityByIdentifierValue(&$newClass, &$values)
     {
-        $this->log('info', 'Obtendo as chaves primárias para '.$newClass);
+        $this->log('info', 'Obtendo as chaves primárias para ' . $newClass);
         //Colocar a busca da PK no Metadata da entidade
         $metadata = $this->getEntityManager()->getClassMetadata($newClass);
         //alterar verificação da verdade do id, e então processar o load da entidade
@@ -268,12 +267,12 @@ abstract class AbstractEntityService extends AbstractService
         }
 
 //        if ($identifier == 'co_upload_file') {
-//            echo $identifier."\n";
-//            echo $this->toCamelCase($identifier)."\n";
-//            var_dump($values);
-//            echo $idValue;
-//            die (1234);
-//        }
+        //            echo $identifier."\n";
+        //            echo $this->toCamelCase($identifier)."\n";
+        //            var_dump($values);
+        //            echo $idValue;
+        //            die (1234);
+        //        }
 
         /**
          * Checa se entidade existe no banco de dados
@@ -378,10 +377,10 @@ abstract class AbstractEntityService extends AbstractService
              */
             $setParentMethod = '';
             $methods = $ref->getMethods();
-            foreach($methods as $method) {
+            foreach ($methods as $method) {
                 $param = current($ref->getMethod($method->name)->getParameters());
-                if(is_object($param)) {
-                    if (is_object( $param->getClass())) {
+                if (is_object($param)) {
+                    if (is_object($param->getClass())) {
                         $parClass = $param->getClass()->name;
                         if ($parClass) {
                             $parClass = explode('\\', $parClass);
@@ -500,14 +499,14 @@ abstract class AbstractEntityService extends AbstractService
                 $strDoc = $ref->getMethod($method)->getDocComment();
                 try {
                     $strAttr = $ref->getProperty($attr)->getDocComment();
-                } catch(\Exception $e) {
+                } catch (\Exception $e) {
                     try {
                         $strAttr = $ref->getProperty($this->toCamelCase($attr))->getDocComment();
-                    } catch(\Exception $e) {
+                    } catch (\Exception $e) {
 
                         try {
                             $strAttr = $ref->getProperty($this->toSnakeCase($attr))->getDocComment();
-                        } catch(\Exception $e) {
+                        } catch (\Exception $e) {
                             throw new \Exception('É, amigo desenvolvedor. Se você chegou a receber esta exception, por favor,
                             corrija seu modelo. Classe e atributo com problemas. ' . get_class($entity) . '->' . $attr);
                         }
@@ -520,8 +519,8 @@ abstract class AbstractEntityService extends AbstractService
                     $class = $params[0]->getClass()->getName();
 
 //                    $bpos = strpos($strDoc, '@param ') + 7;
-//                    $epos = strpos($strDoc, ' $') - $bpos;
-//                    $class = substr($strDoc, $bpos, $epos);
+                    //                    $epos = strpos($strDoc, ' $') - $bpos;
+                    //                    $class = substr($strDoc, $bpos, $epos);
                 }
 
                 if (strstr($strDoc, '\DateTime') || $class == 'DateTime') {
@@ -993,9 +992,24 @@ abstract class AbstractEntityService extends AbstractService
 
         $columns = $dto->request->has('columns') ? $dto->request->get('columns') : $dto->query->get('columns');
 
-        $searchData['orderBy'] = $dto->request->has('orderBy') ? $dto->request->get('orderBy') : $dto->query->get('orderBy');
-
-        $searchData['sortOrder'] = $dto->request->has('sortOrder') ? $dto->request->get('sortOrder') : $dto->query->get('sortOrder');
+        if ($columns) {
+            $order = $dto->request->has('order') ? $dto->request->get('order') : $dto->query->get('order');
+            $searchData['orderBy'] = '';
+            $searchData['sortOrder'] = '';
+            $and = '';
+            if ($order) {
+                foreach ($order as $k => $vals) {
+                    if (isset($columns[$vals['column']]) && $columns[$vals['column']]['data'] != 'g.acoes') {
+                        $searchData['orderBy'] .= $and . ($columns[$vals['column']]['name'] ? $columns[$vals['column']]['name'] : $columns[$vals['column']]['data']);
+                        $searchData['sortOrder'] = $vals['dir'];
+                        $and = ', ';
+                    }
+                }
+            }
+        } else {
+            $searchData['orderBy'] = $dto->request->has('orderBy') ? $dto->request->get('orderBy') : $dto->query->get('orderBy');
+            $searchData['sortOrder'] = $dto->request->has('sortOrder') ? $dto->request->get('sortOrder') : $dto->query->get('sortOrder');
+        }
 
         if (isset($searchData['rows'])) {
             unset($searchData['rows']);
