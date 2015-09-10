@@ -253,7 +253,7 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
     public function getViewGridAction($id, $item = null)
     {
         if ($this->autoRoute('view')) {
-            return '<a href="' . $this->generateUrl($this->viewRoute, array('id' => $id)) . '" class="btn btn-default btn-sm m-r-xs" data-toggle="tooltip" data-placement="top" data-original-title="Visualizar"><i class="fa fa-file-text-o"></i></a>';
+            return '<a href="' . $this->generateUrl($this->viewRoute, array('id' => $id)) . '" class="btn btn-default btn-sm m-r-xs" data-toggle="tooltip" data-placement="top" data-original-title="Visualizar"><i class="fa fa-file-text-o icon-eye-open"></i></a>';
         } else {
             return '';
         }
