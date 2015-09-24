@@ -178,7 +178,7 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
      * Realiza a pesquisa paginada
      * @return \StdClass
      */
-    public function getGridData($searchQueryMethod = 'searchQuery', $prepareGridRowsMethod = 'prepareGridRows')
+    public function getGridData($searchQueryMethod = 'searchQuery', $prepareGridRowsMethod = 'prepareGridRows', $hydration_mode = null)
     {
         //Busca a query que será utilizada na pesquisa para a grid
         $query = $this->getService()->$searchQueryMethod($this->getDto());
@@ -188,7 +188,10 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
         $rows = $this->getDto()->query->has('length') ? $this->getDto()->query->get('length') : $this->getDto()->request->get('length');
         $query->setFirstResult($this->getDto()->query->has('start') ? $this->getDto()->query->get('start') : $this->getDto()->request->get('start'))
             ->setMaxResults($rows);
-        $query->setHydrationMode(Query::HYDRATE_OBJECT);
+
+        if ($hydration_mode) {
+            $query->setHydrationMode($hydration_mode);
+        }
 
         $pagination = new Paginator($query, true);
 
