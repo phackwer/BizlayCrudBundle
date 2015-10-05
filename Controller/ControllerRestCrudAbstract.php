@@ -62,7 +62,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         $start = ($page * $rows) - $rows;
         $start = ($start >= 0) ? $start : 0;
         $query->setFirstResult($start)
-              ->setMaxResults($rows);
+            ->setMaxResults($rows);
 
         if ($hydration_mode) {
             $query->setHydrationMode($hydration_mode);
@@ -173,15 +173,15 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             $this->getService()->save($this->getDto());
             return $this->renderJson($this->getSavedId());
         } catch (UniqueException $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         } catch (ValidationException $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         } catch (VerificationException $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         } catch (HandleUploadsException $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         } catch (EntityException $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         }
     }
 
@@ -196,7 +196,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
                 return $this->renderJson(true);
             }
         } catch (\Exception $e) {
-            throw new BadRequestHttpException ($e->getMessage());
+            throw new BadRequestHttpException($e->getMessage());
         }
 
         throw new BadRequestHttpException();
@@ -209,11 +209,11 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
      */
     protected function treatNoResultsInAutocomplete(array $results)
     {
-        if(empty($results)){
+        if (empty($results)) {
             return array(
                 array(
-                    'name' => 'Nenhum resultado foi encontrado.'
-                )
+                    'name' => 'Nenhum resultado foi encontrado.',
+                ),
             );
         }
         return $results;
@@ -244,5 +244,15 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
         //Obtém lista completa da service
         $arr = $this->getService()->getAllSearchData($this->getDto());
         return $this->renderPdf($arr);
+    }
+
+    /**
+     * Exporta os dados de uma grid com a pesquisa para um HTML
+     */
+    public function exportHtmlAction()
+    {
+        //Obtém lista completa da service
+        $arr = $this->getService()->getAllSearchData($this->getDto());
+        return $this->renderHtml($arr);
     }
 }

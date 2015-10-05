@@ -568,4 +568,16 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
         $arr = $this->getService()->getAllSearchData($this->getDto());
         return $this->renderPdf($arr);
     }
+
+    /**
+     * Exporta os dados de uma grid com a pesquisa para um HTML
+     *
+     * @Route("/export_html")
+     */
+    public function exportHtmlAction()
+    {
+        //Obtém lista completa da service
+        $arr = $this->getService()->getAllSearchData($this->getDto());
+        return $this->renderHtml($arr);
+    }
 }
