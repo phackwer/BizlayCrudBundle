@@ -44,6 +44,17 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
     }
 
     /**
+     * Action que deve ser mapeada para edição de registros
+     * @Rest\Get("/{id}", requirements={"id" = "\d+"})
+     */
+    public function getAllAction($id)
+    {
+        $entityData = $this->getService()->getAllRootEntitiesData($id);
+
+        return $this->renderJson($entityData);
+    }
+
+    /**
      * Realiza a pesquisa paginada
      * IMPORTANTE: definir o hydration mode em sua repository (QUERY::HYDRATE_ARRAY), pois afeta a performance
      * @return \StdClass

@@ -108,6 +108,16 @@ abstract class AbstractEntityService extends AbstractService
     }
 
     /**
+     * Retorna um array com os dados de todas as entidades raíz
+     *
+     * @return array
+     */
+    public function getAllRootEntitiesData()
+    {
+        return $this->getRootEntityAllData();
+    }
+
+    /**
      * Retorna um array com os dados da entidade raiz vazia para a criação
      * Sobrescreva caso precise da entidade pré-populada
      *
@@ -152,6 +162,19 @@ abstract class AbstractEntityService extends AbstractService
         }
 
         return $this->rootEntity;
+    }
+
+    /**
+     * Obtém a entidade raíz da service já mapeada para persistência pelo EntityManager
+     *
+     * @param string $id
+     * @return \SanSIS\BizlayBundle\Entity\AbstractEntity
+     */
+    protected function getRootEntityAllData()
+    {
+        $data = $this->getRootRepository()->findAll();
+
+        return $data;
     }
 
     /**
@@ -932,11 +955,11 @@ abstract class AbstractEntityService extends AbstractService
     public function getRemoveMethod($entity)
     {
         return
-        method_exists($entity, 'setStatusTuple') ? 'setStatusTuple' : (
+            method_exists($entity, 'setStatusTuple') ? 'setStatusTuple' : (
             method_exists($entity, 'setIsActive') ? 'setIsActive' : (
-                method_exists($entity, 'setFlActive') ? 'setFlActive' : false
+            method_exists($entity, 'setFlActive') ? 'setFlActive' : false
             )
-        );
+            );
     }
 
     public function setEntityForRemoval($entity)
