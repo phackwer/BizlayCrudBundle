@@ -6,6 +6,7 @@ use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
 use \SanSIS\BizlayBundle\Service\AbstractService;
 use \SanSIS\BizlayBundle\Service\ServiceDto;
+use SanSIS\CrudBundle\Service\Exception\BusinessException;
 use \SanSIS\CrudBundle\Service\Exception\ValidationException;
 use \SanSIS\CrudBundle\Service\Exception\WrongTypeRootEntityException;
 
@@ -960,6 +961,13 @@ abstract class AbstractEntityService extends AbstractService
     public function removeEntity($id)
     {
         $entity = $this->getRootEntity($id);
+
+        if (!$this->checkUserDeletePermission($entity)) {
+            $notAllowedException = new BusinessException(array(), 'Sem permissão de exclusão');
+            throw $notAllowedException;
+        }
+
+
         $this->setEntityForRemoval($entity);
         $this->getEntityManager()->flush();
 
