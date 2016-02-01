@@ -15,7 +15,7 @@
         }
     ],
     "require": {
-        "sansis/bizlay-bundle": "dev-master"
+        "sansis/bizlay-bundle": "~1.0.0"
     },
     "autoload": {
     	"psr-0": {
