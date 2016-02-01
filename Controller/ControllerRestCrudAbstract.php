@@ -1,16 +1,17 @@
 <?php
 namespace SanSIS\CrudBundle\Controller;
 
-use SanSIS\CrudBundle\Service\Exception\EntityException;
-use SanSIS\CrudBundle\Service\Exception\HandleUploadsException;
-use SanSIS\CrudBundle\Service\Exception\UniqueException;
-use SanSIS\CrudBundle\Service\Exception\ValidationException;
-use SanSIS\CrudBundle\Service\Exception\VerificationException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
 use \FOS\RestBundle\Controller\Annotations as Rest;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
+use \SanSIS\CrudBundle\Service\AbstractEntityService;
+use \SanSIS\CrudBundle\Service\Exception\EntityException;
+use \SanSIS\CrudBundle\Service\Exception\HandleUploadsException;
+use \SanSIS\CrudBundle\Service\Exception\UniqueException;
+use \SanSIS\CrudBundle\Service\Exception\ValidationException;
+use \SanSIS\CrudBundle\Service\Exception\VerificationException;
+use \Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Classe que implementa um controller padrão para CRUDs
@@ -100,7 +101,7 @@ abstract class ControllerRestCrudAbstract extends ControllerAbstract
             // Obscurece os ids dos itens listados:
             // $item = $this->obfuscateIds($item);
             // Cria um item no array de resposta
-            $array[$k] = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item;
+            $array[$k] = AbstractEntityService::serializeEntity($item);
             $array[$k]['userAccessLevels'] = $this->getUserAccessLevels($item);
         }
 

@@ -1,7 +1,7 @@
 <?php
 namespace SanSIS\CrudBundle\Service;
 
-use Doctrine\Common\Inflector\Inflector;
+use \Doctrine\Common\Inflector\Inflector;
 use \Doctrine\ORM\Query;
 use \SanSIS\BizlayBundle\Entity\AbstractEntity as Entity;
 use \SanSIS\BizlayBundle\Service\AbstractService;
@@ -103,19 +103,7 @@ abstract class AbstractEntityService extends AbstractService
      */
     public function getRootEntityData($id = null)
     {
-//        \Doctrine\Common\Util\Debug::dump($this->getRootEntity($id));
-        return $this->getRootEntity($id)->toArray();
-    }
-
-    /**
-     * Retorna um array com os dados da entidade raiz vazia para a criação
-     * Sobrescreva caso precise da entidade pré-populada
-     *
-     * @return array
-     */
-    public function getNewRootEntityData()
-    {
-        return $this->getRootEntity()->toArray();
+        return self::serializeEntity($this->getRootEntity($id));
     }
 
     /**
@@ -221,6 +209,15 @@ abstract class AbstractEntityService extends AbstractService
 
             $this->getEntityManager()->persist($this->rootEntity);
             $this->populateEntities($dto, $this->rootEntity, null);
+
+            /**
+             * @TODO - preparar para utilizar o serializador do Symfony
+             */
+//            $serializer = $this->container->get('serializer');
+//            $entityData = json_encode($dto->request->all());
+//            $this->rootEntity = $serializer->deserialize($entityData, $this->rootEntityName, 'json');
+//            $this->getEntityManager()->persist($this->rootEntity);
+//            $this->processDeletedEntities($dto, $this->rootEntity, null) // este método precisa ser criado;
 
             $this->log('info', 'Fim da população da entidade raiz do tipo ' . $this->getRootEntityName());
 
@@ -448,42 +445,55 @@ abstract class AbstractEntityService extends AbstractService
                  * @TODO 8 - Converter em método, checagem dos dados inseridos contra métodos existentes
                  */
                 if ($this->debug) {
-                    $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($values, true));
+                    $this->log('info',
+                        'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($values,
+                            true));
                 }
                 $attr = lcfirst(substr($method, 3));
-                $snat = $this->toSnakeCase($attr); //ARGH!!!!! JSM/Serializer!!!!
+                $snat = $this->toSnakeCase($attr); //ARGH!!!!! JMS/Serializer!!!!
                 try {
                     if (is_array($values)) {
-                        $attr = isset($values[$attr]) ? $attr : $snat; //ARGH!!!!! JSM/Serializer!!!!
+                        $attr = isset($values[$attr]) ? $attr : $snat; //ARGH!!!!! JMS/Serializer!!!!
                         if (isset($values[$attr])) {
                             $value = $values[$attr];
                         } else {
                             $value = null;
                             continue;
                         }
-                    } else if ($values instanceof \SanSIS\BizlayBundle\Service\ServiceDto) {
+                    } else {
+                        if ($values instanceof \SanSIS\BizlayBundle\Service\ServiceDto) {
 
-                        //ARGH!!!!! JSM/Serializer!!!!
-                        if ($values->query->has($snat)) {
-                            $attr = $snat;
-                        } else if ($values->request->has($snat)) {
-                            $attr = $snat;
-                        }
-                        //FIMDARGH!
+                            //ARGH!!!!! JMS/Serializer!!!!
+                            if ($values->query->has($snat)) {
+                                $attr = $snat;
+                            } else {
+                                if ($values->request->has($snat)) {
+                                    $attr = $snat;
+                                }
+                            }
+                            //FIMDARGH!
 
-                        if ($values->query->has($attr)) {
-                            $value = $values->query->get($attr);
-                        } else if ($values->request->has($attr)) {
-                            $value = $values->request->get($attr);
+                            if ($values->query->has($attr)) {
+                                $value = $values->query->get($attr);
+                            } else {
+                                if ($values->request->has($attr)) {
+                                    $value = $values->request->get($attr);
+                                } else {
+                                    continue;
+                                }
+                            }
                         } else {
-                            continue;
+                            if (is_null($values)) {
+                                $this->log('info',
+                                    'Populando entidade => Não há dados para popular a entidade!' . var_export($values,
+                                        true));
+                                return null;
+                            }
                         }
-                    } else if (is_null($values)) {
-                        $this->log('info', 'Populando entidade => Não há dados para popular a entidade!' . var_export($values, true));
-                        return null;
                     }
                 } catch (\Exception $e) {
-                    $this->log('error', 'Houve algum erro ao tentar lidar com os dados submetidos ' . var_export($values, true));
+                    $this->log('error',
+                        'Houve algum erro ao tentar lidar com os dados submetidos ' . var_export($values, true));
                     throw $e;
                 }
 
@@ -492,7 +502,9 @@ abstract class AbstractEntityService extends AbstractService
                 }
 
                 if ($this->debug) {
-                    $this->log('info', 'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($value, true));
+                    $this->log('info',
+                        'Populando entidade => ' . get_class($entity) . '::' . $method . ' com os dados ' . var_export($value,
+                            true));
                 }
 
                 $params = $ref->getMethod($method)->getParameters();
@@ -571,104 +583,122 @@ abstract class AbstractEntityService extends AbstractService
                         //corrige casos de strings vazias para datas
                         $value = null;
                     }
-                } else if ((strstr($strDoc, 'ArrayCollection') && strstr($strDoc, '@innerEntity')) && 'set' === substr($method, 0, 3) && is_array($value)) {
+                } else {
+                    if ((strstr($strDoc, 'ArrayCollection') && strstr($strDoc,
+                                '@innerEntity')) && 'set' === substr($method, 0, 3) && is_array($value)
+                    ) {
 
-                    $this->log('info', 'Populando ArrayCollection');
+                        $this->log('info', 'Populando ArrayCollection');
 
-                    $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
-                    $class = substr($begin, 0, strpos($begin, "\n"));
-                    $method = str_replace('set', 'add', $method);
-                    if (!method_exists($entity, $method)) {
-                        $method = Inflector::singularize($method);
-                    }
-                    $allInt = true;
-                    foreach ($value as $key => $val) {
-                        if (!is_int($key)) {
-                            $allInt = false;
+                        $begin = str_replace("\r", '', substr($strDoc, strpos($strDoc, '@innerEntity ') + 13));
+                        $class = substr($begin, 0, strpos($begin, "\n"));
+                        $method = str_replace('set', 'add', $method);
+                        if (!method_exists($entity, $method)) {
+                            $method = Inflector::singularize($method);
                         }
-                    }
-                    if ($allInt) {
+                        $allInt = true;
                         foreach ($value as $key => $val) {
-                            /**
-                             * Tratamento para ManyToMany
-                             */
-                            if (strstr($strAttr, 'ManyToMany')) {
+                            if (!is_int($key)) {
+                                $allInt = false;
+                            }
+                        }
+                        if ($allInt) {
+                            foreach ($value as $key => $val) {
+                                /**
+                                 * Tratamento para ManyToMany
+                                 */
+                                if (strstr($strAttr, 'ManyToMany')) {
 
-                                $this->log('info', 'Populando ManyToMany');
+                                    $this->log('info', 'Populando ManyToMany');
 
-                                $begin = substr($strDoc, strpos($strDoc, 'inverseJoinColumns={@ORM\JoinColumn(name="') + strlen('inverseJoinColumns={@ORM\JoinColumn(name="'));
-                                $almost = explode('_', substr($begin, 0, strpos($begin, "\",")));
-                                $attrToId = '';
-                                foreach ($almost as $vall) {
-                                    $attrToId .= ucfirst($vall);
+                                    $begin = substr($strDoc, strpos($strDoc,
+                                            'inverseJoinColumns={@ORM\JoinColumn(name="') + strlen('inverseJoinColumns={@ORM\JoinColumn(name="'));
+                                    $almost = explode('_', substr($begin, 0, strpos($begin, "\",")));
+                                    $attrToId = '';
+                                    foreach ($almost as $vall) {
+                                        $attrToId .= ucfirst($vall);
+                                    }
+                                    $attrToId = lcfirst($attrToId);
+                                    $innerClassAttr = explode('\\', $class);
+                                    $innerClassAttr = lcfirst($innerClassAttr[count($innerClassAttr) - 1]);
+
+                                    if (isset($val[$attrToId])) {
+                                        $val['id'] = $val[$attrToId];
+                                    }
                                 }
-                                $attrToId = lcfirst($attrToId);
-                                $innerClassAttr = explode('\\', $class);
-                                $innerClassAttr = lcfirst($innerClassAttr[count($innerClassAttr) - 1]);
 
-                                if (isset($val[$attrToId])) {
-                                    $val['id'] = $val[$attrToId];
+                                $this->log('info', 'Populando subentities do ArrayCollection');
+
+                                $inner = $this->populateEntities($val, $class, $entity);
+                                if ($inner) {
+                                    if (!$this->debug) {
+                                        $this->getEntityManager()->persist($inner);
+                                    }
+                                    $entity->$method($inner);
                                 }
                             }
 
-                            $this->log('info', 'Populando subentities do ArrayCollection');
-
-                            $inner = $this->populateEntities($val, $class, $entity);
-                            if ($inner) {
-                                if (!$this->debug) {
-                                    $this->getEntityManager()->persist($inner);
+                            continue;
+                        } else {
+                            $this->log('info', 'Atenção: ArrayCollection  não possuia índices');
+                        }
+                    } else {
+                        if ($class && !(strstr($strDoc,
+                                    'ArrayCollection') || $class == 'ArrayCollection') && 'set' === substr($method, 0,
+                                3) && is_array($value) && !strstr($method, 'setId')
+                        ) {
+                            $value = $this->populateEntities($value, $class, $entity);
+                        } else {
+                            if ($class && strstr($strAttr, 'OneToOne')) {
+                                $this->log('info', 'Populando OneToOne');
+                                if (isset($value[$identifier]) || isset($value['idDel'])) {
+                                    $value = $this->populateEntities($value, $class, $entity);
+                                    if (is_object($value)) {
+                                        $this->getEntityManager()->persist($value);
+                                    }
+                                } else {
+                                    $this->log('info',
+                                        'Não foi submetido id para OneToOne: ignorando para evitar updates');
+                                    $getMethod = str_replace('set', 'get', $method);
+                                    $value = $entity->$getMethod();
                                 }
-                                $entity->$method($inner);
+                            } else {
+                                if ($class && strstr($strAttr, 'ToOne')) {
+
+                                    //Colocar a busca da PK no Metadata da entidade
+                                    $metadata = $this->getEntityManager()->getClassMetadata($class);
+                                    //alterar verificação da verdade do id, e então processar o load da entidade
+                                    $getIdent = $metadata->getIdentifier();
+                                    $classId = isset($getIdent[0]) ? $getIdent[0] : 'id';
+
+                                    $this->log('info', 'Populando ManyToOne');
+                                    if (is_array($value) && array_key_exists($classId, $value)) {
+                                        if (isset($value[$classId]) && !is_null($value[$classId]) && trim($value[$classId]) !== '') {
+                                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value[$classId]));
+                                        } else {
+                                            $value = null;
+                                        }
+
+                                    } else {
+                                        if (!is_null($value) && !empty($value)) {
+                                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value));
+                                        } else {
+                                            $value = null;
+                                        }
+
+                                    }
+
+                                } else {
+                                    if (strstr($strDoc, 'float') && $value) {
+                                        $this->log('info',
+                                            'Populando float (tratamento de decimais de money para float)');
+                                        if (strstr($value, ',')) {
+                                            $value = (float)str_replace(',', '.', str_replace('.', '', $value));
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        continue;
-                    } else {
-                        $this->log('info', 'Atenção: ArrayCollection  não possuia índices');
-                    }
-                } else if ($class && !(strstr($strDoc, 'ArrayCollection') || $class == 'ArrayCollection') && 'set' === substr($method, 0, 3) && is_array($value) && !strstr($method, 'setId')) {
-                    $value = $this->populateEntities($value, $class, $entity);
-                } else if ($class && strstr($strAttr, 'OneToOne')) {
-                    $this->log('info', 'Populando OneToOne');
-                    if (isset($value[$identifier]) || isset($value['idDel'])) {
-                        $value = $this->populateEntities($value, $class, $entity);
-                        if (is_object($value)) {
-                            $this->getEntityManager()->persist($value);
-                        }
-                    } else {
-                        $this->log('info', 'Não foi submetido id para OneToOne: ignorando para evitar updates');
-                        $getMethod = str_replace('set', 'get', $method);
-                        $value = $entity->$getMethod();
-                    }
-                } else if ($class && strstr($strAttr, 'ToOne')) {
-
-                    //Colocar a busca da PK no Metadata da entidade
-                    $metadata = $this->getEntityManager()->getClassMetadata($class);
-                    //alterar verificação da verdade do id, e então processar o load da entidade
-                    $getIdent = $metadata->getIdentifier();
-                    $classId = isset($getIdent[0]) ? $getIdent[0] : 'id';
-
-                    $this->log('info', 'Populando ManyToOne');
-                    if (is_array($value) && array_key_exists($classId, $value)) {
-                        if (isset($value[$classId]) && !is_null($value[$classId]) && trim($value[$classId]) !== '') {
-                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value[$classId]));
-                        } else {
-                            $value = null;
-                        }
-
-                    } else {
-                        if (!is_null($value) && !empty($value)) {
-                            $value = $this->getEntityManager()->getRepository($class)->findOneBy(array($classId => $value));
-                        } else {
-                            $value = null;
-                        }
-
-                    }
-
-                } else if (strstr($strDoc, 'float') && $value) {
-                    $this->log('info', 'Populando float (tratamento de decimais de money para float)');
-                    if (strstr($value, ',')) {
-                        $value = (float) str_replace(',', '.', str_replace('.', '', $value));
                     }
                 }
 
@@ -693,7 +723,7 @@ abstract class AbstractEntityService extends AbstractService
                 }
             }
         }
-        /****** fim @TODO 7 ****/
+        /****** fim @TODO 7 *** */
 
         return $entity;
     }
@@ -736,7 +766,8 @@ abstract class AbstractEntityService extends AbstractService
         $this->getRootRepository()->checkUnique($dto, $this->getRootEntity());
         if ($this->getRootRepository()->hasErrors()) {
             foreach ($this->getRootRepository()->getErrors() as $error) {
-                $error['message'] = str_replace($error['attr'], $this->getJsonAttrTitle($this->getRootEntityName(), $error['attr']), $error['message']);
+                $error['message'] = str_replace($error['attr'],
+                    $this->getJsonAttrTitle($this->getRootEntityName(), $error['attr']), $error['message']);
                 $this->errors[] = $error;
             }
         }
@@ -752,7 +783,8 @@ abstract class AbstractEntityService extends AbstractService
     {
         $jsonSchema = $this->getJsonSchema($entityName);
         if (isset($jsonSchema['properties'][$attr]['title'])
-            && !empty($jsonSchema['properties'][$attr]['title'])) {
+            && !empty($jsonSchema['properties'][$attr]['title'])
+        ) {
             return $jsonSchema['properties'][$attr]['title'];
         }
         return $attr;
@@ -932,11 +964,11 @@ abstract class AbstractEntityService extends AbstractService
     public function getRemoveMethod($entity)
     {
         return
-        method_exists($entity, 'setStatusTuple') ? 'setStatusTuple' : (
+            method_exists($entity, 'setStatusTuple') ? 'setStatusTuple' : (
             method_exists($entity, 'setIsActive') ? 'setIsActive' : (
-                method_exists($entity, 'setFlActive') ? 'setFlActive' : false
+            method_exists($entity, 'setFlActive') ? 'setFlActive' : false
             )
-        );
+            );
     }
 
     public function setEntityForRemoval($entity)

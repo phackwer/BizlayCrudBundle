@@ -3,11 +3,11 @@ namespace SanSIS\CrudBundle\Controller;
 
 use \Doctrine\ORM\Query;
 use \Doctrine\ORM\Tools\Pagination\Paginator;
+use \SanSIS\CrudBundle\Service\AbstractEntityService;
 use \SanSIS\BizlayBundle\Controller\ControllerAbstract;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use \Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use \Symfony\Component\Config\Definition\Exception\Exception;
 use \Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
 use \Symfony\Component\Security\Core\Exception\TokenNotFoundException;
 
@@ -223,7 +223,7 @@ abstract class ControllerCrudAbstract extends ControllerAbstract
             //Obscurece os ids dos itens listados:
             $item = $this->obfuscateIds($item);
             //Cria um item no array de resposta
-            $item = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : $item;
+            $item = AbstractEntityService::serializeEntity($item);
             $array[$k]['g'] = $item;
             $array[$k]['g']['acoes'] = $this->getGridActions($item['id'], $item);
         }
