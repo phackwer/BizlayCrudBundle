@@ -631,6 +631,11 @@ abstract class AbstractEntityService extends AbstractService
                     $value = $this->populateEntities($value, $class, $entity);
                 } else if ($class && strstr($strAttr, 'OneToOne')) {
                     $this->log('info', 'Populando OneToOne');
+
+                    $metadata = $this->getEntityManager()->getClassMetadata($class);
+                    $getIdent = $metadata->getIdentifier();
+                    $identifier = isset($getIdent[0]) ? $getIdent[0] : 'id';
+
                     if (isset($value[$identifier]) || isset($value['idDel'])) {
                         $value = $this->populateEntities($value, $class, $entity);
                         if (is_object($value)) {
