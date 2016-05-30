@@ -1,0 +1,67 @@
+## arquivos de projeto de IDE
+.project
+.settings
+.buildpath
+.phpintel*
+nbproject
+.zfproject.xml
+*.sublime-project
+*.sublime-workspace
+*.iws
+.idea/
+*.iml
+
+#lixo temporário
+*~
+
+# arquivos de configuração
+app/config/parameters.yml
+
+# arquivos gerados pelo xcorp-assembly
+app/auto_bundles.php
+app/config/routing_vendor.yml
+
+# arquivos QA usados pelo Jenkins
+build/logs
+build/pdepend
+build/code-browser
+build/coverage
+
+# arquivos gerados pelo Symfony
+app/bootstrap*
+app/bundles_map.php
+app/phpunit.xml
+app/cache/*
+app/logs/*
+app/spool/*
+web/bundles
+# cache de assets em produção
+web/assets
+
+# arquivos gerados por pacotes npm
+/node_modules
+
+# arquivos QA usados pelo Jenkins
+build/logs
+build/pdepend
+build/code-browser
+build/coverage
+# arquivo de controle do Clever And Smart
+build/phpunit-cas.db
+
+# binários do repositório
+bin/*
+!bin/*.phar
+
+# dependências gerenciadas pelo composer
+vendor/*
+
+# upload de arquivos
+web/upload/*
+
+# arquivos SO
+.DS_Store
+thumbs.db
+
+# downloads do Chat
+web/downloads/chat
